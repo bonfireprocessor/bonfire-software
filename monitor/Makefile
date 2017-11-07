@@ -4,7 +4,7 @@
 ARCH ?= rv32im
 ABI=ilp32
 PLATFORM ?= PAPRO
-TOPLEVEL ?= ~/riscv/ise/bonfire/papilio_pro_dram_toplevel.bit
+TOPLEVEL ?= ~/fusesoc_projects/build/bonfire-soc_0/bld-ise/papilio_pro_dram_toplevel.bit
 
 
 
@@ -20,7 +20,7 @@ PROG?=papilio-prog -v -f
 SOFTROOT = ../..
 PROJROOT = $(SOFTROOT)/..
 
-BMMFILE ?= $(PROJROOT)/platform/wildfire_papro/soc_bd.bmm
+BMMFILE ?= ~/fusesoc_projects/build/bonfire-soc_0/bld-ise/soc_bd.bmm
 
 
 PLATFORMDIR=../platform

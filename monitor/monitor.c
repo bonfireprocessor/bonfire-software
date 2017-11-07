@@ -41,6 +41,7 @@ typedef struct {
 
 #define BAUDRATE 500000L
 
+//#define BAUDRATE 115200L
 
 // XModem and spi Flash Variables
 
@@ -134,7 +135,7 @@ void printInfo()
 {
 
 
-  printk("\nBonfire Boot Monitor 0.2g\n");
+  printk("\nBonfire Boot Monitor 0.3a\n");
   printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUART Revision %x\nUptime %d sec\n",
          read_csr(mimpid),read_csr(misa),
          getDivisor(),getUartRevision(),sys_time(NULL));

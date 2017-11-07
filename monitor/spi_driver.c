@@ -175,6 +175,7 @@ spiflash_t* flash_init()
 uint32_t  jedec_id;
 
    spiflash_init();
+   //spiflash_test();
    SPIFLASH_init(&spif,
                 &my_spiflash_config,
                 &my_spiflash_cmds,
