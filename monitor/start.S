@@ -107,7 +107,7 @@ addi sp,sp,-1024 // save 1024 Bytes for Trap handler stack
 
 la a1, __trap
 csrw mtvec,a1
-  
+
 jal main
 
 endless:
@@ -124,6 +124,7 @@ ret
 
 start_user:
 mv sp,a1
+fence.i
 jalr a0
 
 delay_loop:
@@ -145,7 +146,7 @@ jal trap_handler
 // a0 points to returned trap frame
 
 LOAD  t1,33*REGBYTES(a0) // set epc
-csrw mepc,t1 
+csrw mepc,t1
 addi sp,sp, 37*4 // restore Trap handler SP
 csrw mscratch,sp // save SP
 // The SP of the trapped context will be restored below

@@ -106,6 +106,7 @@ static volatile uint32_t sum=0; // To avoid optimizing away code below
   while ((uint32_t)pmem < DRAM_TOP) {
     sum+= *pmem++;
   }
+  asm("fence.i"); // Flush also instruction cache
 
 #endif
 
@@ -135,7 +136,7 @@ void printInfo()
 {
 
 
-  printk("\nBonfire Boot Monitor 0.3a\n");
+  printk("\nBonfire Boot Monitor 0.3b\n");
   printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUART Revision %x\nUptime %d sec\n",
          read_csr(mimpid),read_csr(misa),
          getDivisor(),getUartRevision(),sys_time(NULL));
