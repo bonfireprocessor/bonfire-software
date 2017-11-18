@@ -27,18 +27,6 @@
  *  Written by:      Glenn Engel $
  *  ModuleState:     Experimental $
  *
- *  NOTES:           See Below $
- *
- *  Modified for SPARC by Stu Grossman, Cygnus Support.
- *
- *  This code has been extensively tested on the Fujitsu SPARClite demo board.
- *
- *  To enable debugger support, two things need to happen.  One, a
- *  call to set_debug_traps() is necessary in order to allow any breakpoints
- *  or error conditions to be properly intercepted and reported to gdb.
- *  Two, a breakpoint needs to be generated to begin communication.  This
- *  is most easily accomplished by a call to breakpoint().  Breakpoint()
- *  simulates a breakpoint by executing a trap #1.
  *
  *************
  *
@@ -85,10 +73,18 @@
 #include <signal.h>
 #include <stdio.h>
 
+#include "bonfire.h"
+#include "trapframe.h"
+#include "console.h"
+
 /************************************************************************
  *
  * external low-level support routines
  */
+
+//#define PRINTK(...) printk(__VA_ARGS__)
+
+#define PRINTK(...)
 
 extern void putDebugChar(); /* write a single character      */
 extern int getDebugChar();  /* read and return a single char */
@@ -133,6 +129,20 @@ enum {
   /* Leave this as the last enum.  */
   RISCV_NUM_REGS
 };
+
+void flush_cache()
+{
+#ifdef DCACHE_SIZE
+uint32_t *pmem = (void*)(DRAM_TOP-DCACHE_SIZE+1);
+static volatile uint32_t sum=0; // To avoid optimizing away code below
+
+  while ((uint32_t)pmem < DRAM_TOP) {
+    sum+= *pmem++;
+  }
+#endif
+  asm("fence.i"); // Flush also instruction cache
+}
+
 
 
 /* Convert ch from a hex digit to an int */
@@ -211,7 +221,6 @@ retry:
 
           return &buffer[3];
         }
-
           return &buffer[0];
         }
     }
@@ -228,6 +237,7 @@ putpacket ( char *buffer)
   unsigned char ch;
 
   /*  $<packet info>#<checksum>. */
+  PRINTK("> %s\n",buffer);
   do
     {
       putDebugChar('$');
@@ -403,19 +413,10 @@ hexToInt(char **ptr, int *intValue)
 
 extern void breakinst();
 
-typedef struct
-{
-  long gpr[32];
-  long status;
-  long epc;
-  long badvaddr;
-  long cause;
-  long insn;
-} trapframe_t;
 
 
- trapframe_t*
-handle_exception (trapframe_t *ptf)
+
+trapframe_t* handle_exception (trapframe_t *ptf)
 {
   int tt;           /* Trap type */
   int sigval;
@@ -423,6 +424,9 @@ handle_exception (trapframe_t *ptf)
   int length;
   char *ptr;
 
+  clear_csr(0x7C0,MBONFIRE_SSTEP); // clear Single Step Mode
+
+  //dump_tf(ptf);
 
   ptf->gpr[0]=0;
 
@@ -444,10 +448,10 @@ handle_exception (trapframe_t *ptf)
   *ptr++ = hexchars[RISCV_PC_REGNUM & 0xf];
   *ptr++ = ':';
   // Noch nicht klar welche Variante hier richtig ist !!!
-  sprintf(ptr,"%08lx",ptf->epc);
-  while (*ptr) ptr++;
-   //ptr=mem2hex((char*)&(ptf->epc),ptr,4,0);
-  *ptr++ = ';';
+  //sprintf(ptr,"%08lx",ptf->epc);
+  //while (*ptr) ptr++;
+  ptr=mem2hex((char*)&(ptf->epc),ptr,4,0);
+  //*ptr++ = ';';
 
 
   *ptr++ = ';';
@@ -461,6 +465,7 @@ handle_exception (trapframe_t *ptf)
       remcomOutBuffer[0] = 0;
 
       ptr = getpacket();
+      PRINTK("< %s\n",ptr);
       if (strcmp(ptr,"qSupported")==0) {
         strcpy(remcomOutBuffer,"PacketSize=2048");
         putpacket(remcomOutBuffer);
@@ -494,6 +499,30 @@ handle_exception (trapframe_t *ptf)
       }
       break;
 
+    case 'p':
+
+      if (hexToInt(&ptr, &addr)) {
+        PRINTK("read register %lx\n",addr);
+        if (addr>=0 && addr <=31)
+           ptr=mem2hex((char*)&(ptf->gpr[addr]),remcomOutBuffer,4,0);
+        else {
+          char *data=NULL;
+          switch(addr) {
+            case 32:
+              data=(char*)&(ptf->epc);
+              break;
+            case CSR_MCAUSE:
+              data=(char*)&(ptf->cause);
+              break;
+            default:
+              data=(char*)&(ptf->gpr[0]);  // Dummy...
+          }
+          PRINTK("data : %lx\n",data);
+          if (data) mem2hex(data,remcomOutBuffer,4,0);
+        }
+      }
+      break;
+
     case 'm':     /* mAA..AA,LLLL  Read LLLL bytes at address AA..AA */
       /* Try to read %x,%x.  */
 
@@ -518,10 +547,11 @@ handle_exception (trapframe_t *ptf)
           && hexToInt(&ptr, &length)
           && *ptr++ == ':')
         {
-          if (hex2mem(ptr, (char *)addr, length, 1))
-        strcpy(remcomOutBuffer, "OK");
-          else
-        strcpy(remcomOutBuffer, "E03");
+          if (hex2mem(ptr, (char *)addr, length, 1)) {
+             strcpy(remcomOutBuffer, "OK");
+
+          } else
+             strcpy(remcomOutBuffer, "E03");
         }
       else
         strcpy(remcomOutBuffer, "E02");
@@ -533,9 +563,11 @@ handle_exception (trapframe_t *ptf)
       if (hexToInt(&ptr, &addr))
       {
           ptf->epc=addr;
-      } else {
-          ptf->epc+=4;
       }
+          // In case of a hard coded ebreak jump over it
+      if ( *((uint32_t*)ptf->epc)==0x00100073)  ptf->epc+=4;
+
+      PRINTK("Continue at %08lx\n",ptf->epc);
 
 
 /* Need to flush the instruction cache here, as we may have deposited a
@@ -543,12 +575,22 @@ handle_exception (trapframe_t *ptf)
    some location may have changed something that is in the instruction cache.
  */
 
-      asm("fence.i");
+      flush_cache();
+      return ptf;
+
+    case 's':
+      flush_cache();
+      PRINTK("sstep=%lx ",read_csr(0x7c0));
+      set_csr(0x7c0,MBONFIRE_SSTEP); // Set Single Step Mode
+      PRINTK("sstep=%lx ",read_csr(0x7c0));
+      PRINTK("step at %08lx\n",ptf->epc);
       return ptf;
 
       /* kill the program */
-    case 'k' :      /* do nothing */
-      break;
+    case 'k' :
+      ptf->epc=SRAM_BASE;
+      return ptf;
+
 #if 0
     case 't':       /* Test feature */
       //asm (" std %f30,[%sp]");

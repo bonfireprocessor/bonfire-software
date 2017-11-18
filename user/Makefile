@@ -2,7 +2,7 @@
 .PHONY: all clean
 
 PLATFORM=PAPRO
-ARCH=rv32i
+ARCH=rv32im
 ABI=ilp32
 
 UPLOAD_DIR?=~/upload
@@ -74,7 +74,7 @@ clean:
 fptest.elf :  fptest.o  ftoa.o
 	$(TARGET_LD)  -o $@ $(TARGET_LDFLAGS_SYSCALL)   fptest.o ftoa.o -lm
 
-gdbtest.elf : riscv-gdb-stub.o gdb_interface.o gdb_traps.o
-	$(TARGET_LD)  -o $@ $(TARGET_LDFLAGS_SYSCALL)  riscv-gdb-stub.o gdb_interface.o gdb_traps.o -lm
+gdbtest.elf : riscv-gdb-stub.o gdb_interface.o gdb_traps.o console.o
+	$(TARGET_LD)  -o $@ $(TARGET_LDFLAGS_SYSCALL)  riscv-gdb-stub.o gdb_interface.o gdb_traps.o console.o -lm
 
 
