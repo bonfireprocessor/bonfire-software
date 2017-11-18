@@ -59,15 +59,6 @@
   .endm
 
 
-
-
-start_user:
-mv sp,a1
-fence.i
-jalr a0
-
-
-
 __trap:
 csrw mscratch,sp // save SP
 addi sp,sp, -(37*4) // allocate space for Trap frame
