@@ -37,7 +37,7 @@ TARGET_LDFLAGS_SYSCALL += -march=$(ARCH) -mabi=$(ABI)   \
 
 
 
-all: fptest.bin
+all: fptest.bin gdbtest.bin
 
 clean:
 	rm *.o
@@ -73,5 +73,8 @@ clean:
 
 fptest.elf :  fptest.o  ftoa.o
 	$(TARGET_LD)  -o $@ $(TARGET_LDFLAGS_SYSCALL)   fptest.o ftoa.o -lm
+
+gdbtest.elf : riscv-gdb-stub.o gdb_interface.o gdb_traps.o
+	$(TARGET_LD)  -o $@ $(TARGET_LDFLAGS_SYSCALL)  riscv-gdb-stub.o gdb_interface.o gdb_traps.o -lm
 
 
