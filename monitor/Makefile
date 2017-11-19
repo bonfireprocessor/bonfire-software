@@ -30,7 +30,7 @@ TARGET_NAME=$(PLATFORM)_monitor
 
 
 TARGET_CFLAGS += -march=$(ARCH) -mabi=$(ABI)   -Wall -Os -g -fomit-frame-pointer \
-	-ffreestanding -fno-builtin   \
+	-ffreestanding -fno-builtin  -mstrict-align \
 	-Wall -Werror=implicit-function-declaration \
 	-D$(PLATFORM) -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM) -I./spiflash_driver/src -I../riscv  -I.
 

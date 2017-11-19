@@ -1,5 +1,5 @@
 .section .text
-.extern handle_exception
+.extern trap_handler
 .global __trap
 
 
@@ -61,11 +61,10 @@
 
 __trap:
 csrw mscratch,sp // save SP
-addi sp,sp, -(37*4) // allocate space for Trap frame
+addi sp,sp, -(37*REGBYTES) // allocate space for Trap frame
 save_tf
-mv a0,sp // Pointer to trap frame
-jal handle_exception
-
+mv a0,sp // pass pointer to trap frame
+jal trap_handler
 // a0 points to returned trap frame
 
 LOAD  t1,33*REGBYTES(a0) // set epc

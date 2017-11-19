@@ -136,10 +136,10 @@ void printInfo()
 {
 
 
-  printk("\nBonfire Boot Monitor 0.3b\n");
-  printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUART Revision %x\nUptime %d sec\n",
+  printk("\nBonfire Boot Monitor 0.3c (GCC %s)\n",__VERSION__);
+  printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUptime %d sec\n",
          read_csr(mimpid),read_csr(misa),
-         getDivisor(),getUartRevision(),sys_time(NULL));
+         getDivisor(),sys_time(NULL));
 
   printk("DRAM Size %ld bytes\n",DRAM_SIZE);
 #ifdef DCACHE_SIZE

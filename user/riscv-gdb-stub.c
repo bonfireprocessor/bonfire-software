@@ -71,20 +71,32 @@
 
 #include <string.h>
 #include <signal.h>
-#include <stdio.h>
+#include <stdint.h>
 
-#include "bonfire.h"
+#include "bits.h"
+#include "encoding.h"
+
 #include "trapframe.h"
-#include "console.h"
+
+//Bonfire specific Defines / Coding
+#ifdef BONFIRE
+#include "bonfire.h"
+#endif
 
 /************************************************************************
  *
  * external low-level support routines
  */
 
-//#define PRINTK(...) printk(__VA_ARGS__)
+#ifdef DEBUG
+#include <stdio.h>
+#include "console.h"
+#define PRINTK(...) printk(__VA_ARGS__)
 
+#else
 #define PRINTK(...)
+#endif
+
 
 extern void putDebugChar(); /* write a single character      */
 extern int getDebugChar();  /* read and return a single char */
@@ -96,9 +108,6 @@ extern void exceptionHandler(int exception_number,void *execption_address);
 /* at least NUMREGBYTES*2 are needed for register packets */
 #define BUFMAX 2048
 
-static int initialized = 0; /* !0 means we've been initialized */
-
-static void set_mem_fault_trap();
 
 static const char hexchars[]="0123456789abcdef";
 
@@ -130,9 +139,12 @@ enum {
   RISCV_NUM_REGS
 };
 
+
 void flush_cache()
 {
-#ifdef DCACHE_SIZE
+    //PRINTK("Flushing DCACHE...");
+#if defined(DCACHE_SIZE) && defined(BONFIRE)
+//#pragma message "implementing DCache Flush"
 uint32_t *pmem = (void*)(DRAM_TOP-DCACHE_SIZE+1);
 static volatile uint32_t sum=0; // To avoid optimizing away code below
 
@@ -140,6 +152,7 @@ static volatile uint32_t sum=0; // To avoid optimizing away code below
     sum+= *pmem++;
   }
 #endif
+  //PRINTK("OK\n");
   asm("fence.i"); // Flush also instruction cache
 }
 
@@ -164,8 +177,7 @@ static char remcomOutBuffer[BUFMAX];
 
 /* scan for the sequence $<data>#<checksum>     */
 
-unsigned char *
-getpacket (void)
+static char * getpacket (void)
 {
   char *buffer = &remcomInBuffer[0];
   unsigned char checksum;
@@ -229,8 +241,7 @@ retry:
 
 /* send the packet in buffer.  */
 
-static void
-putpacket ( char *buffer)
+static void putpacket ( char *buffer)
 {
   unsigned char checksum;
   int count;
@@ -263,6 +274,14 @@ putpacket ( char *buffer)
    error.  */
 static volatile int mem_err = 0;
 
+// Indicate that memory errors should be ignored
+static volatile int catch_mem_err =0;
+
+static void set_mem_fault_trap (int enable)
+{
+    catch_mem_err=enable;
+}
+
 /* Convert the memory pointed to by mem into hex, placing result in buf.
  * Return a pointer to the last char put in buf (null), in case of mem fault,
  * return 0.
@@ -270,8 +289,7 @@ static volatile int mem_err = 0;
  * a 0, else treat a fault like any other fault in the stub.
  */
 
-static  char *
-mem2hex ( char *mem,  char *buf, int count, int may_fault)
+static  char *mem2hex ( char *mem,  char *buf, int count, int may_fault)
 {
   unsigned char ch;
 
@@ -295,8 +313,7 @@ mem2hex ( char *mem,  char *buf, int count, int may_fault)
 /* convert the hex array pointed to by buf into binary to be placed in mem
  * return a pointer to the character AFTER the last byte written */
 
-static  char *
-hex2mem ( char *buf,  char *mem, int count, int may_fault)
+static  char *hex2mem ( char *buf,  char *mem, int count, int may_fault)
 {
   int i;
   unsigned char ch;
@@ -317,14 +334,14 @@ hex2mem ( char *buf,  char *mem, int count, int may_fault)
   return mem;
 }
 
-/* This table contains the mapping between SPARC hardware trap types, and
+/* This table contains the mapping between  hardware trap types, and
    signals, which are primarily what GDB understands.  It also indicates
    which hardware traps we need to commandeer when initializing the stub. */
 
 static struct hard_trap_info
 {
-  unsigned char tt;     /* Trap type code for SPARClite */
-  unsigned char signo;      /* Signal that we map this trap into */
+  uint32_t tt;     /* Trap type code */
+  uint8_t signo;      /* Signal that we map this trap into */
 } hard_trap_info[] = {
   {1, SIGSEGV},         /* instruction access error */
   {2, SIGILL},          /* privileged instruction */
@@ -336,32 +353,7 @@ static struct hard_trap_info
   {0, 0}            /* Must be last */
 };
 
-/* Set up exception handlers for tracing and breakpoints */
 
-void
-set_debug_traps (void)
-{
-  struct hard_trap_info *ht;
-
-  for (ht = hard_trap_info; ht->tt && ht->signo; ht++)
-   // exceptionHandler(ht->tt, trap_low);
-
-  initialized = 1;
-}
-
-
-
-static void
-set_mem_fault_trap (int enable)
-{
-  //extern void fltr_set_mem_err();
-  //mem_err = 0;
-
-  //if (enable)
-    //exceptionHandler(9, fltr_set_mem_err);
-  //else
-   // exceptionHandler(9, trap_low);
-}
 
 /* Convert the SPARC hardware trap type code to a unix signal number. */
 
@@ -405,17 +397,13 @@ hexToInt(char **ptr, int *intValue)
   return (numChars);
 }
 
+
+// For detection of nested calls....
+static volatile int semaphore =0;
+
 /*
- * This function does all command procesing for interfacing to gdb.  It
- * returns 1 if you should skip the instruction at the trap address, 0
- * otherwise.
+ * This function does all command procesing for interfacing to gdb.
  */
-
-extern void breakinst();
-
-
-
-
 trapframe_t* handle_exception (trapframe_t *ptf)
 {
   int tt;           /* Trap type */
@@ -424,20 +412,34 @@ trapframe_t* handle_exception (trapframe_t *ptf)
   int length;
   char *ptr;
 
+
+
+  //if (semaphore) {
+  //// We are in a nested call (most likely because of trying to step into code used by the debugger itself)
+      //// In case of a ebreak jump over it
+      //if ( *((uint32_t*)ptf->epc)==0x00100073)  ptf->epc+=4;
+      //return ptf;
+  //}
+
+  semaphore=0; // currently dont use semaphore...
+
   clear_csr(0x7C0,MBONFIRE_SSTEP); // clear Single Step Mode
 
-  //dump_tf(ptf);
 
   ptf->gpr[0]=0;
-
-
-
-
 
   tt = ptf->cause;
 
   /* reply to host that an exception has occurred */
   sigval = computeSignal(tt);
+
+
+  if (catch_mem_err && (sigval==SIGSEGV || sigval==SIGBUS)) {
+    mem_err=1;
+    ptf->epc+=4;
+    return ptf;
+  }
+
   ptr = remcomOutBuffer;
 
   *ptr++ = 'T';
@@ -447,15 +449,8 @@ trapframe_t* handle_exception (trapframe_t *ptf)
   *ptr++ = hexchars[RISCV_PC_REGNUM >> 4];
   *ptr++ = hexchars[RISCV_PC_REGNUM & 0xf];
   *ptr++ = ':';
-  // Noch nicht klar welche Variante hier richtig ist !!!
-  //sprintf(ptr,"%08lx",ptf->epc);
-  //while (*ptr) ptr++;
   ptr=mem2hex((char*)&(ptf->epc),ptr,4,0);
-  //*ptr++ = ';';
-
-
   *ptr++ = ';';
-
   *ptr++ = 0;
 
   putpacket(remcomOutBuffer);
@@ -486,16 +481,19 @@ trapframe_t* handle_exception (trapframe_t *ptf)
     case 'g':       /* return the value of the CPU registers */
       {
         ptr = remcomOutBuffer;
-        ptr=mem2hex((char*)&(ptf->gpr[0]),ptr,32*4,0);
-        ptr=mem2hex((char*)&(ptf->epc),ptr,4,0);
+        ptr=mem2hex((char*)&(ptf->gpr[0]),ptr,32*REGBYTES,0);
+        ptr=mem2hex((char*)&(ptf->epc),ptr,REGBYTES,0);
 
       }
       break;
 
     case 'G':      /* set the value of the CPU registers - return OK */
       {
+         if (hex2mem(ptr, (char *)&(ptf->gpr[0]),32*REGBYTES,0)) {
+             strcpy(remcomOutBuffer, "OK");
+          } else
+             strcpy(remcomOutBuffer, "E03");
 
-        strcpy(remcomOutBuffer,"E01");
       }
       break;
 
@@ -504,7 +502,7 @@ trapframe_t* handle_exception (trapframe_t *ptf)
       if (hexToInt(&ptr, &addr)) {
         PRINTK("read register %lx\n",addr);
         if (addr>=0 && addr <=31)
-           ptr=mem2hex((char*)&(ptf->gpr[addr]),remcomOutBuffer,4,0);
+           ptr=mem2hex((char*)&(ptf->gpr[addr]),remcomOutBuffer,REGBYTES,0);
         else {
           char *data=NULL;
           switch(addr) {
@@ -523,7 +521,16 @@ trapframe_t* handle_exception (trapframe_t *ptf)
       }
       break;
 
-    case 'm':     /* mAA..AA,LLLL  Read LLLL bytes at address AA..AA */
+   case 'P':
+      if (hexToInt(&ptr, &addr)) {
+         if (addr>=0 && addr <=31)
+             hex2mem(ptr, (char *)&(ptf->gpr[addr]),REGBYTES,0);
+          else
+             strcpy(remcomOutBuffer, "E03");
+      }
+      break;
+
+   case 'm':     /* mAA..AA,LLLL  Read LLLL bytes at address AA..AA */
       /* Try to read %x,%x.  */
 
       if (hexToInt(&ptr, &addr)
@@ -564,7 +571,7 @@ trapframe_t* handle_exception (trapframe_t *ptf)
       {
           ptf->epc=addr;
       }
-          // In case of a hard coded ebreak jump over it
+      // In case of a hard coded ebreak jump over it
       if ( *((uint32_t*)ptf->epc)==0x00100073)  ptf->epc+=4;
 
       PRINTK("Continue at %08lx\n",ptf->epc);
@@ -576,20 +583,29 @@ trapframe_t* handle_exception (trapframe_t *ptf)
  */
 
       flush_cache();
+      semaphore=0;
+      catch_mem_err=0;
       return ptf;
 
     case 's':
+       // In case of a hard coded ebreak jump over it
+      if ( *((uint32_t*)ptf->epc)==0x00100073)  ptf->epc+=4;
       flush_cache();
-      PRINTK("sstep=%lx ",read_csr(0x7c0));
-      set_csr(0x7c0,MBONFIRE_SSTEP); // Set Single Step Mode
-      PRINTK("sstep=%lx ",read_csr(0x7c0));
       PRINTK("step at %08lx\n",ptf->epc);
+      semaphore=0;
+      catch_mem_err=0;
+      set_csr(0x7c0,MBONFIRE_SSTEP); // Set Single Step Mode
       return ptf;
 
       /* kill the program */
     case 'k' :
+#ifdef BONFIRE
       ptf->epc=SRAM_BASE;
+      semaphore=0;
       return ptf;
+#else
+     break;
+#endif
 
 #if 0
     case 't':       /* Test feature */
@@ -597,8 +613,13 @@ trapframe_t* handle_exception (trapframe_t *ptf)
       break;
 #endif
     case 'r':       /* Reset */
-
+#ifdef BONFIRE
+      ptf->epc=SRAM_BASE;
+      semaphore=0;
+      return ptf;
+#else
       break;
+#endif
     }           /* switch */
 
       /* reply to the request */
@@ -606,20 +627,34 @@ trapframe_t* handle_exception (trapframe_t *ptf)
     }
     // should never reach this point
     ptf->epc+=4;
+    semaphore=0;
     return ptf;
 }
 
-/* This function will generate a breakpoint exception.  It is used at the
-   beginning of a program to sync up with a debugger and can be used
-   otherwise as a quick means to stop program execution and "break" into
-   the debugger. */
 
-void
-breakpoint (void)
+trapframe_t* trap_handler(trapframe_t *ptf)
 {
-  if (!initialized)
-    return;
 
-  asm("sbreak");
 
+    if (ptf->cause & 0x80000000) {
+      // place interrupt handler here...
+      return ptf;
+    }  else {
+       return handle_exception(ptf);
+    }
 }
+
+
+extern void __trap();
+
+t_ptrapfuntion gdb_initDebugger(int set_mtvec)
+{
+  if (set_mtvec) {
+    write_csr(mtvec,__trap);
+  }
+  return handle_exception;
+}
+
+
+
+

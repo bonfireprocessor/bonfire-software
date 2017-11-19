@@ -1,9 +1,10 @@
 
 .PHONY: all clean
 
-PLATFORM=PAPRO
+PLATFORM?=PAPRO
 ARCH=rv32im
 ABI=ilp32
+DEBUGFLAG?=NODEBUG
 
 UPLOAD_DIR?=~/upload
 
@@ -25,9 +26,9 @@ LINKDEF?=$(PLATFORMDIR)/$(PLATFORM)/firmware.ld
 BOOTLINK=wildfboot.ld
 
 TARGET_CFLAGS +=  -march=$(ARCH) -mabi=$(ABI) -Wall -Og -g  -fomit-frame-pointer \
-	-ffreestanding -fno-builtin  \
+	-ffreestanding -fno-builtin  -mstrict-align \
 	-Wall -Werror=implicit-function-declaration \
-	-D$(PLATFORM) -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM) -I../riscv
+	-DBONFIRE -D$(PLATFORM) -D$(DEBUGFLAG) -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM) -I../riscv
 
 
 
@@ -74,7 +75,7 @@ clean:
 fptest.elf :  fptest.o  ftoa.o
 	$(TARGET_LD)  -o $@ $(TARGET_LDFLAGS_SYSCALL)   fptest.o ftoa.o -lm
 
-gdbtest.elf : riscv-gdb-stub.o gdb_interface.o gdb_traps.o console.o
-	$(TARGET_LD)  -o $@ $(TARGET_LDFLAGS_SYSCALL)  riscv-gdb-stub.o gdb_interface.o gdb_traps.o console.o -lm
+gdbtest.elf : riscv-gdb-stub.o gdb_interface.o gdb_traps.o console.o debug_test.o
+	$(TARGET_LD)  -o $@ $(TARGET_LDFLAGS_SYSCALL)  riscv-gdb-stub.o gdb_interface.o gdb_traps.o console.o debug_test.o -lm
 
 

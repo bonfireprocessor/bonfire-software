@@ -34,7 +34,7 @@ static void setDivisor(uint32_t divisor){
    uartadr[UART_CONTROL]= 0x010000L | (uint16_t)divisor; // Set Baudrate divisor and enable port
 }
 
-static void setBaudRate(int baudrate) {
+void gdb_setup_interface(int baudrate) {
 // sample_clk = (f_clk / (baudrate * 16)) - 1
 // (96.000.000 / (115200*16))-1 = 51,08
 
@@ -43,33 +43,5 @@ static void setBaudRate(int baudrate) {
 
 
 
-void exceptionHandler(int exception_number,void *execption_address)
-{
-  // TODO
-};
 
-extern void __trap();
-
-
-void do_increment(volatile int *px)
-{
-  (*px)++;
-}
-
-void main()
-{
-volatile int i=0;
-
-  setBaudRate(500000);
-  printk("Run\n");
-
-
-  write_csr(mtvec,__trap);
-  asm("sbreak");
-  while(1) {
-
-    do_increment(&i);
-    if ((i % 10000)==0 ) printk("*");
-  }
-}
 
