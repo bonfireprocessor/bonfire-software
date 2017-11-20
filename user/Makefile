@@ -25,7 +25,7 @@ LINKDEF_DRAM=bonfire_dram.ld
 LINKDEF?=$(PLATFORMDIR)/$(PLATFORM)/firmware.ld
 BOOTLINK=wildfboot.ld
 
-TARGET_CFLAGS +=  -march=$(ARCH) -mabi=$(ABI) -Wall -Og -g  -fomit-frame-pointer \
+TARGET_CFLAGS +=  -march=$(ARCH) -mabi=$(ABI) -Wall -Og -g  -fomit-frame-pointer -fno-inline-functions-called-once  \
 	-ffreestanding -fno-builtin  -mstrict-align \
 	-Wall -Werror=implicit-function-declaration \
 	-DBONFIRE -D$(PLATFORM) -D$(DEBUGFLAG) -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM) -I../riscv

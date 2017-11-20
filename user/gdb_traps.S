@@ -65,8 +65,8 @@ addi sp,sp, -(37*REGBYTES) // allocate space for Trap frame
 save_tf
 mv a0,sp // pass pointer to trap frame
 jal trap_handler
-// a0 points to returned trap frame
 
+// a0 points to returned trap frame
 LOAD  t1,33*REGBYTES(a0) // set epc
 csrw mepc,t1
 

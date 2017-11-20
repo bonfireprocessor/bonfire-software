@@ -140,12 +140,14 @@ enum {
 };
 
 
-void flush_cache()
+
+uint32_t flush_cache()
 {
     //PRINTK("Flushing DCACHE...");
 #if defined(DCACHE_SIZE) && defined(BONFIRE)
 //#pragma message "implementing DCache Flush"
 uint32_t *pmem = (void*)(DRAM_TOP-DCACHE_SIZE+1);
+
 static volatile uint32_t sum=0; // To avoid optimizing away code below
 
   while ((uint32_t)pmem < DRAM_TOP) {
@@ -153,7 +155,8 @@ static volatile uint32_t sum=0; // To avoid optimizing away code below
   }
 #endif
   //PRINTK("OK\n");
-  asm("fence.i"); // Flush also instruction cache
+
+  return 0;
 }
 
 
@@ -404,6 +407,23 @@ static volatile int semaphore =0;
 /*
  * This function does all command procesing for interfacing to gdb.
  */
+
+
+static trapframe_t*  prepare_return(trapframe_t *ptf,int flagSingleStep)
+{
+  flush_cache();
+  asm("fence.i"); // Flush also instruction cache
+  // In case of a hard coded ebreak jump over it
+  if ( *((uint32_t*)ptf->epc)==0x00100073)  ptf->epc+=4;
+  semaphore=0;
+  catch_mem_err=0;
+  PRINTK("prepare_return\n");
+
+  if (flagSingleStep)  set_csr(0x7c0,MBONFIRE_SSTEP); // Set Single Step Mode
+  return ptf;
+}
+
+
 trapframe_t* handle_exception (trapframe_t *ptf)
 {
   int tt;           /* Trap type */
@@ -414,17 +434,21 @@ trapframe_t* handle_exception (trapframe_t *ptf)
 
 
 
+
   //if (semaphore) {
   //// We are in a nested call (most likely because of trying to step into code used by the debugger itself)
-      //// In case of a ebreak jump over it
+  //// In case of a ebreak jump over it
+
       //if ( *((uint32_t*)ptf->epc)==0x00100073)  ptf->epc+=4;
       //return ptf;
   //}
 
-  semaphore=0; // currently dont use semaphore...
+  semaphore=1; // currently dont use semaphore...
 
   clear_csr(0x7C0,MBONFIRE_SSTEP); // clear Single Step Mode
 
+  //dump_tf(ptf);
+  PRINTK("Trap %lx\n",ptf->cause);
 
   ptf->gpr[0]=0;
 
@@ -571,31 +595,12 @@ trapframe_t* handle_exception (trapframe_t *ptf)
       {
           ptf->epc=addr;
       }
-      // In case of a hard coded ebreak jump over it
-      if ( *((uint32_t*)ptf->epc)==0x00100073)  ptf->epc+=4;
-
       PRINTK("Continue at %08lx\n",ptf->epc);
-
-
-/* Need to flush the instruction cache here, as we may have deposited a
-   breakpoint, and the icache probably has no way of knowing that a data ref to
-   some location may have changed something that is in the instruction cache.
- */
-
-      flush_cache();
-      semaphore=0;
-      catch_mem_err=0;
-      return ptf;
+      return prepare_return(ptf,0);
 
     case 's':
-       // In case of a hard coded ebreak jump over it
-      if ( *((uint32_t*)ptf->epc)==0x00100073)  ptf->epc+=4;
-      flush_cache();
       PRINTK("step at %08lx\n",ptf->epc);
-      semaphore=0;
-      catch_mem_err=0;
-      set_csr(0x7c0,MBONFIRE_SSTEP); // Set Single Step Mode
-      return ptf;
+      return prepare_return(ptf,1);
 
       /* kill the program */
     case 'k' :
@@ -625,16 +630,12 @@ trapframe_t* handle_exception (trapframe_t *ptf)
       /* reply to the request */
       putpacket(remcomOutBuffer);
     }
-    // should never reach this point
-    ptf->epc+=4;
-    semaphore=0;
-    return ptf;
+    return prepare_return(ptf,0);
 }
 
 
 trapframe_t* trap_handler(trapframe_t *ptf)
 {
-
 
     if (ptf->cause & 0x80000000) {
       // place interrupt handler here...
