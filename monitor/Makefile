@@ -6,6 +6,7 @@ ABI=ilp32
 PLATFORM ?= PAPRO
 TOPLEVEL ?= ~/fusesoc_projects/build/bonfire-soc_0/bld-ise/papilio_pro_dram_toplevel.bit
 
+UART?=uart
 
 
 TARGET_PREFIX ?= riscv32-unknown-elf
@@ -35,11 +36,11 @@ TARGET_CFLAGS += -march=$(ARCH) -mabi=$(ABI)   -Wall -Os -g -fomit-frame-pointer
 	-D$(PLATFORM) -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM) -I./spiflash_driver/src -I../riscv  -I.
 
 TARGET_LDFLAGS += -march=$(ARCH) -mabi=$(ABI) -nostartfiles  \
-	-Wl,-m,elf32lriscv --specs=nosys.specs -Wl,-T$(LINKDEF) \
+	-Wl,-m,elf32lriscv --specs=nano.specs -Wl,-T$(LINKDEF) \
 	-Wl,--gc-sections
 
 
-OBJECTS = start.o monitor.o uart.o snprintf.o string.o console.o mempattern.o xm.o spiflash.o syscall.o spi_driver.o testdcache.o
+OBJECTS = start.o monitor.o $(UART).o snprintf.o string.o console.o mempattern.o xm.o spiflash.o syscall.o spi_driver.o testdcache.o
 
 run: $(TARGET_NAME).bit
 	$(PROG) $<
@@ -60,7 +61,7 @@ all: $(TARGET_NAME).hex $(TARGET_NAME).bin
 
 
 %.hex : %.elf
-	$(TARGET_OBJCOPY) -j .text -j .data -O binary $< $(basename $@).bin
+	$(TARGET_OBJCOPY) -S -O binary  $< $(basename $@).bin
 	$(HEXDUMP) -v -e '1/4 "%08x\n"' $(basename $@).bin >$@
 	$(TARGET_PREFIX)-objdump -S -d $< >$(basename $@).lst
 	$(TARGET_PREFIX)-objdump -s $< >$(basename $@).dmp
