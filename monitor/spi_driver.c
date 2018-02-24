@@ -142,7 +142,11 @@ const spiflash_config_t my_spiflash_config = {
   .block_erase_4_ms = 100,
   .block_erase_8_ms = 0, // not supported
   .block_erase_16_ms = 0, // not supported
+#ifdef ARTY_AXI
+  .block_erase_32_ms = 0,
+#else    
   .block_erase_32_ms = 175,
+#endif  
   .block_erase_64_ms = 300,
   .chip_erase_ms = 30000
 };

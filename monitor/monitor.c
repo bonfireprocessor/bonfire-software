@@ -39,7 +39,9 @@ typedef struct {
 
 #define C_MAGIC 0x55aaddbb
 
+
 #define BAUDRATE 500000L
+
 
 //#define BAUDRATE 115200L
 

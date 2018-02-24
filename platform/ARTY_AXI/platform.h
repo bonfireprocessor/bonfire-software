@@ -3,8 +3,17 @@
 
 
 #define WISHBONE_IO_SPACE 0x40000000
+#define AXI_IO_SPACE 0x80000000
 
-#define UART_BASE (WISHBONE_IO_SPACE)
+//#define UART_BASE (WISHBONE_IO_SPACE)
+
+// New:  2* ZPUINO_UART in AXI4 Space
+#define UART0_BASE 0x80020000
+#define UART1_BASE 0x80030000
+
+#define UART_BASE UART0_BASE
+
+
 #define SPIFLASH_BASE (WISHBONE_IO_SPACE+0x100)
 #define GPIO_BASE (WISHBONE_IO_SPACE+0x200)
 #define MTIME_BASE 0x0FFFF0000
@@ -21,7 +30,10 @@
 
 #define DCACHE_SIZE (8192*4)  // D Cache Size in Bytes
 
-#define SYSCLK 83333333
+
+#define SYSCLK  83333333
+
+
 
 #define CLK_PERIOD (1e+9 / SYSCLK)  // in ns...
 
