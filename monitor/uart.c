@@ -24,12 +24,13 @@
 
 #include "platform.h"
 
+
+
 #define UART_TX 0
 #define UART_RECV 0
 #define UART_STATUS 1
-#define UART_CONTROL 1
-//#define UART_INTE 0x10
-//#define UART_REVISION 0x14
+#define UART_CONTROL 2
+
 
 #define ENABLE_SEND_DELAY 1
 
@@ -133,7 +134,7 @@ static uint16_t l_divisor=0;
 void _setDivisor(uint32_t divisor){
 
    l_divisor = divisor;
-   uartadr[UART_CONTROL]= 0x010000L | (uint16_t)divisor; // Set Baudrate divisor and enable port
+   uartadr[UART_CONTROL]= 0x030000L | (uint16_t)divisor; // Set Baudrate divisor and enable port and set extended mode
 }
 
 void setDivisor(uint32_t divisor)
@@ -144,14 +145,13 @@ void setDivisor(uint32_t divisor)
 
 uint32_t getDivisor()
 {
-  return l_divisor;
+  return  uartadr[UART_CONTROL] & 0x0ffff ;
 }
 
 void setBaudRate(int baudrate) {
-// sample_clk = (f_clk / (baudrate * 16)) - 1
-// (96.000.000 / (115200*16))-1 = 51,08
 
-   setDivisor(SYSCLK / (baudrate*16) -1);
+
+   setDivisor(SYSCLK / baudrate -1);
 }
 
 uint8_t getUartRevision()

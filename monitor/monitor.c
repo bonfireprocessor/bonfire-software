@@ -115,18 +115,18 @@ static volatile uint32_t sum=0; // To avoid optimizing away code below
 
 void changeBaudRate()
 {
-char strbuff[7];
+char strbuff[8];
 long newBaud;
 
    printk("\nEnter new baudrate: ");
    read_num_str(strbuff,sizeof(strbuff));
    if (strbuff[0]) {
      newBaud=atol(strbuff);
-     if (newBaud>=300L && newBaud<=500000L) {
+     if (newBaud>=2400L && newBaud<=2000000L) {
         printk("\nChangine baudratew now....\n");
         setBaudRate(newBaud);
      } else {
-       printk("\nInvalid, enter 300-500000\n",newBaud);
+       printk("\nInvalid, enter 2400-2000000\n",newBaud);
      }
    }
 }
@@ -136,7 +136,7 @@ void printInfo()
 {
 
 
-  printk("\nBonfire Boot Monitor 0.3c (GCC %s)\n",__VERSION__);
+  printk("\nBonfire Boot Monitor 0.3d (GCC %s)\n",__VERSION__);
   printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUptime %d sec\n",
          read_csr(mimpid),read_csr(misa),
          getDivisor(),sys_time(NULL));
