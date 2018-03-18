@@ -147,6 +147,7 @@ void printInfo()
 #ifdef DCACHE_SIZE
   print_cache_size();
 #endif
+  printk("Framing errors: %ld\n",getFramingErrors());
 }
 
 void error(int n)
@@ -295,7 +296,7 @@ int err;
          recv_bytes=xmodem_receive((char*)args[0],args[1]);
          nPages= recv_bytes >> 12; // Number of 4096 Byte pages
          if (recv_bytes % 4096) nPages+=1; // Round up..
-         brk_address= ((uint32_t)LOAD_BASE + recv_bytes + 4096) & 0x0fffffffc;
+         brk_address= (args[0] + recv_bytes + 4096) & 0x0fffffffc;
          flush_dache();
          break;
        case 'E':
@@ -303,7 +304,7 @@ int err;
            printk("\n%ld Bytes received\n%d(%x) Pages\nBreak Address %x\n",recv_bytes,nPages,nPages,brk_address);
          else {
            printk("\nXmodem Error %ld occured\n",recv_bytes);
-           //xmmodem_errrorDump();
+           xmmodem_errrorDump();
          }
          break;
        case 'T':

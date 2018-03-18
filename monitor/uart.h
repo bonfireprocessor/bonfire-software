@@ -23,5 +23,7 @@ void setBaudRate(int baudrate);
 void wait(long nWait);
 uint8_t getUartRevision();
 
+uint32_t getFramingErrors();
+
 
 #endif
