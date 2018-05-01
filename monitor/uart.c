@@ -65,7 +65,7 @@ void writechar(char c)
 char readchar()
 {
 uint32_t rx_data;
-	
+
   while (!(uartadr[UART_STATUS] & 0x01)); // Wait while receive buffer empty
   rx_data=uartadr[UART_RECV];
   if (rx_data & 0x80000000) framing_errors++;
@@ -89,7 +89,7 @@ uint32_t rx_data;
       timeout--;
 
   }while(forever ||  timeout>=0 );
- 
+
   return -1;
 
 }
@@ -146,7 +146,9 @@ void _setDivisor(uint32_t divisor){
 void setDivisor(uint32_t divisor)
 {
     _setDivisor(divisor);
+#ifndef BASIC
     wait(1000000);
+#endif
 }
 
 uint32_t getDivisor()
@@ -169,6 +171,6 @@ uint8_t getUartRevision()
 uint32_t getFramingErrors()
 {
 uint32_t fe=framing_errors;
-  framing_errors=0;	
-  return fe;	
+  framing_errors=0;
+  return fe;
 }

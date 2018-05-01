@@ -7,9 +7,11 @@
 
 int main() {
 
-  _setDivisor(51);
-  while(1) {
-    writestr("1234 ");
-  }  
+int i;
 
+  setBaudRate(115200);
+  for(i=0;i<3;i++) {
+    writestr("Bonfire ");
+  }
+  writechar('\x1a'); // Simulation end marker
 }
