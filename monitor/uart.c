@@ -146,9 +146,6 @@ void _setDivisor(uint32_t divisor){
 void setDivisor(uint32_t divisor)
 {
     _setDivisor(divisor);
-#ifndef BASIC
-    wait(1000000);
-#endif
 }
 
 uint32_t getDivisor()

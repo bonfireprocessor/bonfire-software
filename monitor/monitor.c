@@ -237,6 +237,10 @@ uint32_t flashAddress;
 int err;
 
    setBaudRate(BAUDRATE);
+#ifndef SIMULATOR
+     wait(1000000);
+#endif
+
 
    printInfo();
    spi=flash_init();
