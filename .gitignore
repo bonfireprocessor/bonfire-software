@@ -16,4 +16,6 @@
 /fusesoc.log
 *.geany
 *.vhd.old
-
+/monitor/.cproject
+/monitor/.project
+/monitor/.settings/language.settings.xml
