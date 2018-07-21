@@ -48,7 +48,7 @@ all: ledslow.hex counter.hex memtest.hex ledsim.hex mult.hex memsim.hex sim_hell
 
 
 %.hex : %.elf
-	$(TARGET_OBJCOPY) -j .text  -j .eh_frame -j .rodata -j .data -O binary $< $(basename $@).bin
+	$(TARGET_OBJCOPY) -S -O binary  $< $(basename $@).bin
 	$(HEXDUMP) -v -e '1/4 "%08x\n"' $(basename $@).bin >$@
 	$(TARGET_PREFIX)-objdump -S -d $< >$(basename $@).lst
 	$(TARGET_PREFIX)-objdump -s $< >$(basename $@).dmp
@@ -71,18 +71,18 @@ memtest.elf: start.o memtest.o uart.o mempattern.o
 
 mult.elf : start.o mult.o uart.o snprintf.o console.o
 	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) start.o mult.o uart.o snprintf.o console.o
-	
+
 memsim.elf: start.o memsim.o  mempattern.o
 	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) start.o memsim.o  mempattern.o
-	
+
 sim_hello.elf: start.o uart.o sim_hello.o
 	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) start.o uart.o sim_hello.o
-	
+
 dram_codesim.elf : start.o dram_codesim.o
 	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) start.o dram_codesim.o
 
 jump0.elf : jump0.S
 	$(TARGET_LD) -o $@ -march=RV32IM -nostartfiles   -Wl,-T$(BOOTLINK)	$<
-	
-	
+
+
 

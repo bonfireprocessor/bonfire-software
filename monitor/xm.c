@@ -6,6 +6,7 @@
 #include "uart.h"
 #include "xmodem.h"
 #include "console.h"
+#include <string.h>
 
 
 
@@ -26,16 +27,16 @@
 #define XM_EOT  0x04
 
 
-extern uint8_t *gpioadr;
 
-//#define XM_DEBUGMODE 1
+
+#define XM_DEBUGMODE 1
 
 #ifdef XM_DEBUGMODE
 
 uint8_t h1,h2,chksum,recv_chksum;
 enum txm_state {s_idle,s_h1,s_h2,s_pack,s_chk,s_recover } xm_state;
 
-inline char hex_nibble(u8 nibble)
+char hex_nibble(u8 nibble)
 {
    nibble=nibble & 0x0f;
    return (nibble<=9)?(char)(nibble + '0'):(char)(nibble-10+'A');
@@ -92,17 +93,14 @@ int packsize;
     do {
       writechar(XM_NAK);
       recv=wait_receive(XMODEM_TIMEOUT);
-      *gpioadr=(uint8_t)retry;
 
     }while(recv<0 && retry--);
     if (recv<0) return XMODEM_ERROR_RETRYEXCEED;
-    *gpioadr=0;
     xm_state=s_idle;
     h1=h2=chksum=0;
 
 
     do {
-      *gpioadr=(uint8_t)xm_state;
       switch(xm_state) {
 
          case s_idle:
@@ -138,6 +136,9 @@ int packsize;
            h2=(uint8_t)recv;
            if (h1 == (~h2 & 0x0ff) ) {
              xm_state=s_pack;
+#ifdef XM_DEBUGMODE
+            memset(dest,packsize,0);
+#endif             
            } else {
 #ifdef XM_DEBUGMODE
             // Abort immedatly on error for debugging purposes

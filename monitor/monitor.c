@@ -39,7 +39,9 @@ typedef struct {
 
 #define C_MAGIC 0x55aaddbb
 
+
 #define BAUDRATE 500000L
+
 
 //#define BAUDRATE 115200L
 
@@ -115,18 +117,18 @@ static volatile uint32_t sum=0; // To avoid optimizing away code below
 
 void changeBaudRate()
 {
-char strbuff[7];
+char strbuff[8];
 long newBaud;
 
    printk("\nEnter new baudrate: ");
    read_num_str(strbuff,sizeof(strbuff));
    if (strbuff[0]) {
      newBaud=atol(strbuff);
-     if (newBaud>=300L && newBaud<=500000L) {
+     if (newBaud>=2400L && newBaud<=2000000L) {
         printk("\nChangine baudratew now....\n");
         setBaudRate(newBaud);
      } else {
-       printk("\nInvalid, enter 300-500000\n",newBaud);
+       printk("\nInvalid, enter 2400-2000000\n",newBaud);
      }
    }
 }
@@ -136,7 +138,7 @@ void printInfo()
 {
 
 
-  printk("\nBonfire Boot Monitor 0.3c (GCC %s)\n",__VERSION__);
+  printk("\nBonfire Boot Monitor 0.3d (GCC %s)\n",__VERSION__);
   printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUptime %d sec\n",
          read_csr(mimpid),read_csr(misa),
          getDivisor(),sys_time(NULL));
@@ -145,6 +147,7 @@ void printInfo()
 #ifdef DCACHE_SIZE
   print_cache_size();
 #endif
+  printk("Framing errors: %ld\n",getFramingErrors());
 }
 
 void error(int n)
@@ -234,6 +237,10 @@ uint32_t flashAddress;
 int err;
 
    setBaudRate(BAUDRATE);
+#ifndef SIMULATOR
+     wait(1000000);
+#endif
+
 
    printInfo();
    spi=flash_init();
@@ -293,7 +300,7 @@ int err;
          recv_bytes=xmodem_receive((char*)args[0],args[1]);
          nPages= recv_bytes >> 12; // Number of 4096 Byte pages
          if (recv_bytes % 4096) nPages+=1; // Round up..
-         brk_address= ((uint32_t)LOAD_BASE + recv_bytes + 4096) & 0x0fffffffc;
+         brk_address= (args[0] + recv_bytes + 4096) & 0x0fffffffc;
          flush_dache();
          break;
        case 'E':
@@ -301,7 +308,7 @@ int err;
            printk("\n%ld Bytes received\n%d(%x) Pages\nBreak Address %x\n",recv_bytes,nPages,nPages,brk_address);
          else {
            printk("\nXmodem Error %ld occured\n",recv_bytes);
-           //xmmodem_errrorDump();
+           xmmodem_errrorDump();
          }
          break;
        case 'T':
