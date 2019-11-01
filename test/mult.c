@@ -29,7 +29,7 @@ char *p;
 }
 
 
-inline void newline() {
+void newline() {
   write_console("\n");    
 }
 
@@ -38,7 +38,8 @@ char buff[80];
 int x,y,result;
 uint32_t impid;
 
-  //setBaudRate(115200);
+   wait(5000000);
+  //setBaudRate(230400);
   setBaudRate(500000);
   
   impid=get_impid();
