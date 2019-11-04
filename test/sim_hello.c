@@ -26,12 +26,16 @@ int i=0;
   _write_word((void*)GPIO_BASE+GPIO_OUTPUT_VAL,get_impid());
   wait(3000000); 
   
- setBaudRate(38400);
+  
+ //_setDivisor(0x340);
  // for(i=0;i<3;i++) {
   while(1) { 
     _write_word((void*)GPIO_BASE+GPIO_OUTPUT_VAL, 1 << (i++ % 8 ) );  
     wait(1000000);
-    if ((i % 16) == 0)  writestr("Bonfire \n");
+    if ((i % 8) == 0) {
+      setBaudRate(38400);
+      writestr("Bonfire \n\r");
+    } 
   }   
  
  // }

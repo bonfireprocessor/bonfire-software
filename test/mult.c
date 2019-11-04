@@ -38,9 +38,9 @@ char buff[80];
 int x,y,result;
 uint32_t impid;
 
-   wait(5000000);
+
   //setBaudRate(230400);
-  setBaudRate(500000);
+  setBaudRate(38400);
   
   impid=get_impid();
   
