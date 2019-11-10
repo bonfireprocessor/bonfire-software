@@ -12,12 +12,12 @@
 #include "console.h"
 #include "xmodem.h"
 #include "syscall.h"
+#include "mem_rw.h"
+#include "bonfire_gpio.h"
 
 #include "spi_driver.h"
 
 
-
-extern uint8_t *gpioadr;
 
 
 
@@ -39,9 +39,11 @@ typedef struct {
 
 #define C_MAGIC 0x55aaddbb
 
-
-#define BAUDRATE 500000L
-
+#ifdef PLATFORM_BAUDRATE
+  #define BAUDRATE PLATFORM_BAUDRATE
+#else   
+    #define BAUDRATE 500000L
+#endif
 
 //#define BAUDRATE 115200L
 
@@ -89,7 +91,7 @@ void xm_send(u8 c)
   writechar((char)c);
 }
 
-
+#if (!defined (NO_DRAMTEST))
 void test_dram(uint32_t sz)
 {
    printk("\nTesting %d Kilobytes of DRAM...\n",sz/1024);
@@ -97,6 +99,7 @@ void test_dram(uint32_t sz)
    printk("Verifying...\n");
    printk("Found %d errors\n",verifypattern((void*)DRAM_BASE,sz/4));
 }
+#endif 
 
 void flush_dache()
 {
@@ -155,6 +158,7 @@ void error(int n)
   printk("Error %d\n",n);
 }
 
+#if (!defined (NO_FLASH))
 
 void writeBootImage(spiflash_t *spi)
 {
@@ -213,6 +217,24 @@ int err;
   }
 }
 
+#endif 
+
+#if (defined(GPIO_TEST) )
+
+void gpio_test()
+{
+int i;
+
+   while(wait_receive(1000000)== -1) { 
+    _write_word((void*)GPIO_BASE+GPIO_OUTPUT_VAL, 1 << (i++ % 8 ) );  
+    if ((i % 8) == 0) {
+      printk("Uptime: %d sec\n",sys_time(NULL));
+    } 
+  }   
+
+} 
+#endif
+
 
 int main()
 {
@@ -236,14 +258,23 @@ uint32_t nFlashbytes;
 uint32_t flashAddress;
 int err;
 
+
    setBaudRate(BAUDRATE);
 #ifndef SIMULATOR
      wait(1000000);
 #endif
 
+#if (defined(GPIO_TEST) )
+
+  _write_word((void*)GPIO_BASE+GPIO_OUTPUT_EN,0xf);
+  _write_word((void*)GPIO_BASE+GPIO_OUTPUT_VAL,get_impid());
+#endif
+
 
    printInfo();
+#if (!defined (NO_FLASH))   
    spi=flash_init();
+#endif    
 
    while(1) {
      restart:
@@ -278,6 +309,7 @@ int err;
          hex_dump((void*)dumpaddress,64);
          dumpaddress+=64;
          break;
+#if (!defined(NO_XMODEM))         
        case 'X': // XModem receive command
          switch(nArgs) {
             case 0:
@@ -303,6 +335,7 @@ int err;
          brk_address= (args[0] + recv_bytes + 4096) & 0x0fffffffc;
          flush_dache();
          break;
+
        case 'E':
          if (recv_bytes>=0)
            printk("\n%ld Bytes received\n%d(%x) Pages\nBreak Address %x\n",recv_bytes,nPages,nPages,brk_address);
@@ -311,9 +344,12 @@ int err;
            xmmodem_errrorDump();
          }
          break;
+#endif  
+#if (!defined (NO_DRAMTEST))        
        case 'T':
          test_dram(nArgs>=1?args[0]:DRAM_TOP);
          break;
+#endif          
       case 'B':
         changeBaudRate();
         break;
@@ -329,6 +365,7 @@ int err;
          start_user((uint32_t)pfunc,USER_STACK );
          break;
 
+#if (!defined (NO_FLASH))
        case 'F': // flash read
          // Usage ftarget_adr,flash_page(4K),len (pages)
          switch(nArgs) {
@@ -372,11 +409,18 @@ int err;
        case 'W': // flash write
          writeBootImage(spi);
          break;
+#endif 
+
 #ifdef DCACHE_SIZE
        case 'C':
          test_dcache(nArgs?args[0]:DCACHE_SIZE);
          break;
 #endif
+#if (defined(GPIO_TEST) )
+       case 'P':
+          gpio_test();
+          break; 
+#endif 
        default:
          writechar('\a'); // beep...
       }

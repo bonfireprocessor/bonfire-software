@@ -4,6 +4,7 @@
 
 #define PATTERN 0x0ABCD
 
+#if (!defined (NO_DRAMTEST))
 
 inline  uint16_t rotate4(uint16_t p)
 {
@@ -55,3 +56,4 @@ int errcount=0;
    return errcount; 
 }
 
+#endif 

@@ -25,9 +25,10 @@
 //#define SYSCLK 12000000
 #define SYSCLK 32000000
 
+
 #define CLK_PERIOD (1e+9 / SYSCLK)  // in ns...
 
-#define DCACHE_SIZE 0 // (2048*4)  // DCache Size in Bytes
+//#define DCACHE_SIZE 0 // (2048*4)  // DCache Size in Bytes
 
 
 // Parameters for SPI Flash
@@ -36,6 +37,14 @@
 #define MAX_FLASH_IMAGESIZE (2024*1024) // Max 2MB of flash used for boot image
 #define FLASH_IMAGEBASE (1024*3072)  // Boot Image starts at 3MB in Flash
 
+#define PLATFORM_BAUDRATE 38400
+
+#define NO_SYSCALL
+#define NO_FLASH
+#define NO_XMODEM
+#define NO_DRAMTEST
+
+#define GPIO_TEST
 
 
 #endif
