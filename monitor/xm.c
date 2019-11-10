@@ -8,7 +8,7 @@
 #include "console.h"
 #include <string.h>
 
-
+#if (!defined(NO_XMODEM))  
 
 // This global function receives a x-modem transmission consisting of
 // (potentially) several blocks.  Returns the number of bytes received or
@@ -197,3 +197,4 @@ int packsize;
 
 
 }
+#endif 

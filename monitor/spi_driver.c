@@ -2,6 +2,8 @@
 #include "console.h"
 #include "spiflash.h"
 
+#if (!defined (NO_FLASH))
+
 /*
 -- registers:
 -- base+0   -- chip select control; bit 0 is slave_cs
@@ -240,5 +242,5 @@ uint8_t *compare_buffer=(uint8_t*) (DRAM_TOP & 0xffff0000);
 }
 
 
-
+#endif 
 

@@ -38,9 +38,10 @@ char buff[80];
 int x,y,result;
 uint32_t impid;
 
-  //setBaudRate(115200);
-  setBaudRate(38400);
-  
+
+  //setBaudRate(230400);
+  setBaudRate(115200);
+  write_console("\nWelcome to Bonfire\n");
   impid=get_impid();
   
   printk("\nProcessor ID: %x\n",impid);

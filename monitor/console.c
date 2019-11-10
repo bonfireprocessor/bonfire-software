@@ -16,7 +16,7 @@
 
 static void vprintk(const char* s, va_list vl)
 {
-  static char out[256]; // make buffer so that it works also when low on stack space
+  /*static */ char out[256]; // make buffer so that it works also when low on stack space
 
   vsnprintf(out, sizeof(out), s, vl);
   write_console(out);
