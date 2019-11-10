@@ -8,7 +8,7 @@ int main() {
 
 int i;
 
-  setBaudRate(115200);
+  setBaudRate(38400);
  // for(i=0;i<3;i++) {
     writestr("Bonfire ");
  // }

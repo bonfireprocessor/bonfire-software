@@ -146,7 +146,7 @@ void _setDivisor(uint32_t divisor){
 void setDivisor(uint32_t divisor)
 {
     _setDivisor(divisor);
-#ifndef BASIC
+#ifndef SIM
     wait(1000000);
 #endif
 }

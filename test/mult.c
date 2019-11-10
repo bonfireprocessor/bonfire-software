@@ -29,7 +29,7 @@ char *p;
 }
 
 
-inline void newline() {
+void newline() {
   write_console("\n");    
 }
 
@@ -39,7 +39,7 @@ int x,y,result;
 uint32_t impid;
 
   //setBaudRate(115200);
-  setBaudRate(500000);
+  setBaudRate(38400);
   
   impid=get_impid();
   
@@ -47,6 +47,7 @@ uint32_t impid;
   
   while(1) {
     writestr("Enter x (max 10 digits):");
+    writechar('\x1a'); // End simulation
     readnumstr(buff,11);
     x=atoi(buff);
     newline();

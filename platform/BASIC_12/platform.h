@@ -1,5 +1,5 @@
-#ifndef BASIC_PLATFORM_H
-#define BASIC_PLATFORM_H
+#ifndef BASIC12_PLATFORM_H
+#define BASIC12_PLATFORM_H
 
 
 // New Defintions for new bonfire-soc-io core
@@ -22,7 +22,7 @@
 #define SRAM_SIZE 32768
 #define SRAM_TOP  (SRAM_BASE+SRAM_SIZE-1)
 
-#define SYSCLK 96000000
+#define SYSCLK 12000000  // 12 MHz 
 
 #define CLK_PERIOD (1e+9 / SYSCLK)  // in ns...
 
@@ -34,6 +34,8 @@
 #define FLASHSIZE (8192*1024)
 #define MAX_FLASH_IMAGESIZE (2024*1024) // Max 2MB of flash used for boot image
 #define FLASH_IMAGEBASE (1024*3072)  // Boot Image starts at 3MB in Flash
+
+#pragma message "BASIC_12 platform"
 
 #define SIM // undef when not compiling for simulator 
 
