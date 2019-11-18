@@ -40,7 +40,14 @@
 #define SRAM_SIZE (32*1024)
 #define SRAM_TOP  (SRAM_BASE+SRAM_SIZE-1)
 
-#define DCACHE_SIZE (8192*4)  // D Cache Size in Bytes
+#define DCACHE_WORDS 4096
+#define DCACHE_BYTELANES 16  // Width of Cache Word in Bytes
+#define DCACHE_LINE_SIZE 4 // Width of Cache Line Size in Cache Words
+#define DCACHE_SIZE (DCACHE_WORDS*DCACHE_BYTELANES) // Cache Size in Bytes !!
+#define DCACHE_LINES (DCACHE_WORDS/DCACHE_LINE_SIZE)
+
+
+//#define DCACHE_SIZE (8192*16)  // D Cache Size in Bytes
 
 
 #define SYSCLK  83333333

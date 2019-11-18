@@ -17,6 +17,10 @@
 
 #include "dhry.h"
 
+#ifdef TB
+#include "bonfire.h"
+#endif
+
 
 /* Global Variables: */
 
@@ -87,8 +91,13 @@ main ()
   REG   int             Run_Index;
   REG   int             Number_Of_Runs;
 
-  /* Initializations */
+  
 
+  printf ("\n");
+  printf ("Dhrystone Benchmark, Version 2.1 (Language: C)\n");
+  printf ("\n");
+
+  /* Initializations */
   Next_Ptr_Glob = (Rec_Pointer) malloc (sizeof (Rec_Type));
   Ptr_Glob = (Rec_Pointer) malloc (sizeof (Rec_Type));
 
@@ -106,9 +115,7 @@ main ()
         /* Warning: With 16-Bit processors and Number_Of_Runs > 32000,  */
         /* overflow may occur for this array element.                   */
 
-  printf ("\n");
-  printf ("Dhrystone Benchmark, Version 2.1 (Language: C)\n");
-  printf ("\n");
+  
   if (Reg)
   {
     printf ("Program compiled with 'register' attribute\n");
@@ -121,9 +128,13 @@ main ()
   }
   printf ("Please give the number of runs through the benchmark: ");
   {
+  #ifdef TB 
+    Number_Of_Runs = 1;
+  #else     
     int n;
     scanf ("%d", &n);
     Number_Of_Runs = n;
+  #endif   
   }
   printf ("\n");
 
@@ -284,8 +295,12 @@ main ()
     printf ("Dhrystones per Second:                      ");
     printf ("%6.1f \n", Dhrystones_Per_Second);
     printf ("\n");
-  }
 
+  }
+#ifdef TB
+
+    *(( volatile long* )( MONITOR_BASE ))=1;
+#endif 
 }
 
 

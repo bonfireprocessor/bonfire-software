@@ -76,4 +76,8 @@ spiflash.o : spiflash_driver/src/spiflash.c
 $(TARGET_NAME).elf : $(OBJECTS) $(LINKDEF)
 	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS)  $(OBJECTS)
 
-
+clean:
+	rm -f *.o
+	rm -f *.elf
+	rm -f *.lst
+	rm -f *.dmp

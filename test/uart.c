@@ -146,7 +146,8 @@ void _setDivisor(uint32_t divisor){
 void setDivisor(uint32_t divisor)
 {
     _setDivisor(divisor);
-#ifndef SIM
+
+#if !defined(BASIC) && !defined(TB) && !defined(SIM)
     wait(1000000);
 #endif
 }
