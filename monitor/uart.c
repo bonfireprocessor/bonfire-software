@@ -32,7 +32,7 @@
 #define UART_CONTROL 2
 
 
-#define ENABLE_SEND_DELAY 0
+//#define ENABLE_SEND_DELAY 0
 
 
 volatile uint32_t *uartadr=(uint32_t *)UART_BASE;

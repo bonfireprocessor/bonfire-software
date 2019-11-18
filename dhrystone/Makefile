@@ -32,14 +32,16 @@ TARGET_CFLAGS +=  -march=$(ARCH) -mabi=$(ABI) -Wall -O2 -g  -fomit-frame-pointer
 
 
 TARGET_LDFLAGS_SYSCALL += -march=$(ARCH) -mabi=$(ABI)   \
-	 -Wl,--gc-sections  -Wl,-T$(LINKDEF_DRAM)
+	 -Wl,--gc-sections  -Wl,-T$(LINKDEF_DRAM) -lgloss
 
 
 TARGET_LDFLAGS_BRAM += -march=$(ARCH) -mabi=$(ABI) -nostartfiles   \
 	-Wl,-m,elf32lriscv --specs=nosys.specs -Wl,-T$(LINKDEF) \
-	-Wl,--gc-sections
+	-Wl,--gc-sections 
 
 all: dhrystone.bin dhrystone_bram.bit
+
+hex: dhrystone_bram.hex
 
 clean:
 	rm *.o
@@ -68,7 +70,7 @@ clean:
 		$(TARGET_PREFIX)-size  $<
 
 %.hex : %.elf
-	$(TARGET_OBJCOPY) -S -O $< $(basename $@).bin
+	$(TARGET_OBJCOPY) -S -O  binary $< $(basename $@).bin
 	$(HEXDUMP) -v -e '1/4 "%08x\n"' $(basename $@).bin >$@
 	$(TARGET_PREFIX)-objdump -S -d $< >$(basename $@).lst
 	$(TARGET_PREFIX)-objdump -s $< >$(basename $@).dmp
@@ -90,7 +92,7 @@ write.o : libwrap/write.c
 
 dhrystone.elf :  dhry_1.o  dhry_2.o dhry_stubs.o dhry_printf.o malloc.o sbrk.o
 	$(TARGET_LD)  -o $@ $(TARGET_LDFLAGS_SYSCALL)  -Wl,--wrap=scanf,--wrap=printf,--wrap=malloc,--wrap=sbrk \
-	  dhry_1.o  dhry_2.o dhry_stubs.o dhry_printf.o malloc.o sbrk.o
+	  dhry_1.o  dhry_2.o dhry_stubs.o dhry_printf.o malloc.o sbrk.o -lg  -lgloss -lg
 
 
 dhrystone_bram.elf :  dhry_1.o  dhry_2.o dhry_stubs.o dhry_printf.o uart.o  malloc.o sbrk.o  write.o start.o
