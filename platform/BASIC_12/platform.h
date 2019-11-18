@@ -26,7 +26,7 @@
 
 #define CLK_PERIOD (1e+9 / SYSCLK)  // in ns...
 
-#define DCACHE_SIZE 0 // (2048*4)  // DCache Size in Bytes
+//#define DCACHE_SIZE 0 // (2048*4)  // DCache Size in Bytes
 
 
 // Parameters for SPI Flash
@@ -38,5 +38,12 @@
 #pragma message "BASIC_12 platform"
 
 #define SIM // undef when not compiling for simulator 
+
+#define PLATFORM_BAUDRATE 38400
+
+#define NO_SYSCALL
+#define NO_FLASH
+#define NO_XMODEM
+#define NO_DRAMTEST
 
 #endif

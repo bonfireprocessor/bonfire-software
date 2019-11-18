@@ -260,7 +260,7 @@ int err;
 
 
    setBaudRate(BAUDRATE);
-#ifndef SIMULATOR
+#ifndef SIM
      wait(1000000);
 #endif
 
@@ -276,6 +276,9 @@ int err;
    spi=flash_init();
 #endif    
 
+   #ifdef SIM
+   writechar(0x1a); // Stop simulation here 
+   #endif
    while(1) {
      restart:
      write_console("\n>");

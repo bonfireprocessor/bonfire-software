@@ -54,9 +54,9 @@ static volatile int c;
 void writechar(char c)
 {
 
-#ifdef  ENABLE_SEND_DELAY
+ #if defined(ENABLE_SEND_DELAY) && !defined(SIM) 
    wait(1000);
-#endif
+ #endif
   while (!(uartadr[UART_STATUS] & 0x2)); // Wait while transmit buffer full
   uartadr[UART_TX]=(uint32_t)c;
 
