@@ -44,9 +44,10 @@ static uint32_t framing_errors = 0L;
 void wait(long nWait)
 {
 static volatile int c;
-
+#ifndef SIM
   c=0;
   while (c++ < nWait);
+#endif   
 }
 
 
@@ -148,7 +149,7 @@ void setDivisor(uint32_t divisor)
     _setDivisor(divisor);
 
 #if !defined(BASIC) && !defined(TB) && !defined(SIM)
-    wait(1000000);
+    wait(50000);
 #endif
 }
 

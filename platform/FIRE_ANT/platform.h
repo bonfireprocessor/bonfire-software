@@ -19,11 +19,12 @@
 #define DRAM_SIZE 0
 #define DRAM_TOP  (DRAM_BASE+DRAM_SIZE-1)
 #define SRAM_BASE 0x0C000000
-#define SRAM_SIZE 16384
+#define SRAM_SIZE 2048
 #define SRAM_TOP  (SRAM_BASE+SRAM_SIZE-1)
 
 //#define SYSCLK 12000000
-#define SYSCLK 25000000
+//#define SYSCLK   33333333
+#define   SYSCLK   24997500
 
 
 #define CLK_PERIOD (1e+9 / SYSCLK)  // in ns...
