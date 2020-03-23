@@ -34,13 +34,15 @@ TARGET_LDFLAGS += -march=$(ARCH) -mabi=$(ABI) -nostartfiles   \
 	-Wl,-m,elf32lriscv --specs=nosys.specs -Wl,-T$(LINKDEF) \
 	-Wl,--gc-sections
 
-all: ledslow.hex counter.hex memtest.hex ledsim.hex mult.hex memsim.hex sim_hello.hex dram_codesim.hex
+
+
+all: ledslow.hex counter.hex memtest.hex ledsim.hex mult.hex memsim.hex sim_hello.hex dram_codesim.hex hw_hello.hex
 
 %.bit: %.elf
 	$(DATA2MEM) -bm $(PROJROOT)/platform/wildfire_papro/soc_bd.bmm  -bd $< -bt $(TOPLEVEL)  -o hb $(basename $@)
 
 %.o : %.S
-	$(TARGET_CC) $(TARGET_CFLAGS) -c $<
+	$(TARGET_CC) $(TARGET_CFLAGS)  -c $<
 
 %.o : %.c
 	$(TARGET_CC) $(TARGET_CFLAGS) -c $<
@@ -54,6 +56,12 @@ all: ledslow.hex counter.hex memtest.hex ledsim.hex mult.hex memsim.hex sim_hell
 	$(TARGET_PREFIX)-objdump -s $< >$(basename $@).dmp
 	$(TARGET_PREFIX)-size  $<
 
+
+hw_uart.o: uart.c
+	$(TARGET_CC) $(TARGET_CFLAGS) -o hw_uart.o -c uart.c
+
+uart.o: uart.c
+	$(TARGET_CC) $(TARGET_CFLAGS) -DSIM -c uart.c 	
 
 
 ledslow.elf: start.o ledslow.o
@@ -75,8 +83,18 @@ mult.elf : start.o mult.o uart.o snprintf.o console.o
 memsim.elf: start.o memsim.o  mempattern.o
 	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) start.o memsim.o  mempattern.o
 
+sim_hello.o : sim_hello.c
+	$(TARGET_CC) $(TARGET_CFLAGS) -DSIM  -c sim_hello.c 
+
 sim_hello.elf: start.o uart.o sim_hello.o
-	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) start.o uart.o sim_hello.o
+	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) start.o uart.o sim_hello.o snprintf.o console.o
+
+hw_hello.o : sim_hello.c
+	$(TARGET_CC) $(TARGET_CFLAGS) -o hw_hello.o -c sim_hello.c 
+
+
+hw_hello.elf: start.o hw_uart.o hw_hello.o
+	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) start.o hw_uart.o hw_hello.o snprintf.o console.o	
 
 dram_codesim.elf : start.o dram_codesim.o
 	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) start.o dram_codesim.o
