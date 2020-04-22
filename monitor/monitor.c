@@ -177,12 +177,13 @@ int err;
      FLASH_HEADER->magic=C_MAGIC;
      FLASH_HEADER->nPages=nPages;
      FLASH_HEADER->brkAddress=brk_address;
-     err=flash_Overwrite(spi,FLASH_IMAGEBASE,4096,HEADER_BASE);
-     if (err!=SPIFLASH_OK) return;
-     flashAddress=FLASH_IMAGEBASE+4096;
 
+     //err=flash_Overwrite(spi,FLASH_IMAGEBASE,4096,HEADER_BASE);
+     //if (err!=SPIFLASH_OK) return;
+     //flashAddress=FLASH_IMAGEBASE+4096;
 
-     err=flash_Overwrite(spi,flashAddress,nFlashBytes,LOAD_BASE);
+     // TH 220420: Write Header + Image in one step
+     err=flash_Overwrite(spi,FLASH_IMAGEBASE,nFlashBytes+4096,HEADER_BASE);
 
    }
 
