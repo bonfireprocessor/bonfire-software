@@ -138,7 +138,7 @@ void printInfo()
 {
 
 
-  printk("\nBonfire Boot Monitor 0.3d (GCC %s)\n",__VERSION__);
+  printk("\nBonfire Boot Monitor 0.3e (GCC %s)\n",__VERSION__);
   printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUptime %d sec\n",
          read_csr(mimpid),read_csr(misa),
          getDivisor(),sys_time(NULL));
@@ -158,11 +158,10 @@ void error(int n)
 
 void writeBootImage(spiflash_t *spi)
 {
-
-
 uint32_t nFlashBytes;
 uint32_t flashAddress;
 int err;
+
    if (!nPages)
      printk("First load Image !");
    else {
