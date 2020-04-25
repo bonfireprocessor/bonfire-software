@@ -26,6 +26,11 @@
 #define FLASH_DEV2     0x17
 
 
+#ifndef FLASH_ERASEBLOCK
+#define FLASH_ERASEBLOCK 4096
+#endif 
+
+
 typedef uint8_t t_flashid[3];
 
 static volatile uint32_t *spiflash = (void*)SPIFLASH_BASE;
@@ -141,13 +146,13 @@ const spiflash_config_t my_spiflash_config = {
   .addr_endian = SPIFLASH_ENDIANNESS_BIG, // normally big endianess on addressing
   .sr_write_ms = 10,
   .page_program_ms = 2,
-  .block_erase_4_ms = 100,
+  .block_erase_4_ms = 0, // 100,
   .block_erase_8_ms = 0, // not supported
   .block_erase_16_ms = 0, // not supported
 //#ifdef ARTY_AXI
 //  .block_erase_32_ms = 0,
 //#else    
-  .block_erase_32_ms = 175,
+  .block_erase_32_ms = 0, // 175,
 //#endif  
   .block_erase_64_ms = 300,
   .chip_erase_ms = 30000
@@ -206,7 +211,16 @@ int flash_print_spiresult(int code)
 }
 
 
+bool check_erase(void *buffer,int len_words)
+{
+uint32_t *p=(uint32_t*)buffer;
 
+    //printk("%x: %x\n",buffer,*p);
+    for (int i=0;i<len_words;i++) {
+      if (*p++ != 0xffffffff) return false;
+    }
+    return true; 
+}
 
 int flash_Overwrite(spiflash_t *spi, uint32_t addr, uint32_t len, const uint8_t *buf)
 {
@@ -214,27 +228,40 @@ int res;
 int nBlocks,i;
 uint8_t *compare_buffer=(uint8_t*) (DRAM_TOP & 0xffff0000);
 
-   nBlocks = len >> 12;
-   if (len % 4096) nBlocks++;
-   printk("Compare Buffer at %x\n",compare_buffer);
 
-   printk("Erasing %d 4KB Blocks at %x...\n",nBlocks,addr);
-   res=SPIFLASH_erase(spi,addr,len);
-   flash_print_spiresult(res);
-   if (res!=SPIFLASH_OK) return res;
+  printk("Compare Buffer at %x\n",compare_buffer);
 
-   for(i=0;i<nBlocks && res==SPIFLASH_OK ;i++) {
-     printk("Writing mem %x to flash %x\n",buf,addr);
-     res=SPIFLASH_write(spi,addr,4096,buf);
-     if (res!=SPIFLASH_OK) continue;
-     res=SPIFLASH_read(spi,addr,4096,compare_buffer);
-     if (res!=SPIFLASH_OK) continue;
-     printk("Comparing...\n");
-     if (memcmp(buf,compare_buffer,4096)!=0) {
-		printk("SPI Write Error at Block %d\n",i);
-		res=SPIFLASH_ERR_INTERNAL; // not better error code for the moment... 
-	 }	 
-     addr+=4096; buf+=4096;
+   // Round up erase size by erase block size 
+  nBlocks = len / FLASH_ERASEBLOCK;
+   if (len % FLASH_ERASEBLOCK) nBlocks++;
+   
+  printk("Erasing %d %dKB Blocks at %x...\n",nBlocks,FLASH_ERASEBLOCK/1024,addr);
+  res=SPIFLASH_erase(spi,addr,nBlocks*FLASH_ERASEBLOCK);
+  flash_print_spiresult(res);
+  if (res!=SPIFLASH_OK) return res;
+
+  // Recaclculate with Block size of 4KB, to write/compare in 4K units
+  nBlocks = len / 4096;
+  if (len % 4096) nBlocks++;
+
+  for(i=0;i<nBlocks && res==SPIFLASH_OK ;i++) {
+    // New: Check for sucessfull erase
+    SPIFLASH_read(spi,addr,4096,compare_buffer);
+    if (!check_erase(compare_buffer,4096/4)) {
+      printk("Block %d at flash %x not erased\n",i,addr);
+      return SPIFLASH_ERR_INTERNAL;
+    }
+    printk("Writing mem %x to flash %x\n",buf,addr);
+    res=SPIFLASH_write(spi,addr,4096,buf);
+    if (res!=SPIFLASH_OK) continue;
+    res=SPIFLASH_read(spi,addr,4096,compare_buffer);
+    if (res!=SPIFLASH_OK) continue;
+    printk("Comparing...\n");
+    if (memcmp(buf,compare_buffer,4096)!=0) {
+      printk("SPI Write Error at Block %d\n",i);
+      res=SPIFLASH_ERR_INTERNAL; // not better error code for the moment... 
+    }	 
+    addr+=4096; buf+=4096;
   }
 
   return flash_print_spiresult(res);

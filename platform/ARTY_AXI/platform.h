@@ -63,4 +63,8 @@
 #define MAX_FLASH_IMAGESIZE (2024*1024) // Max 2MB of flash used for boot image
 #define FLASH_IMAGEBASE (1024*3072)  // Boot Image starts at 3MB in Flash
 
+#define FLASH_ERASEBLOCK (64*1024)
+
+#define REV_E 1
+
 #endif

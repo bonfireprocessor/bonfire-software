@@ -141,7 +141,7 @@ void printInfo()
 {
 
 
-  printk("\nBonfire Boot Monitor 0.3f (20190330) (GCC %s)\n",__VERSION__);
+  printk("\nBonfire Boot Monitor 0.3g (20200425) (GCC %s)\n",__VERSION__);
   printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUptime %d sec\n",
          read_csr(mimpid),read_csr(misa),
          getDivisor(),sys_time(NULL));
@@ -162,11 +162,10 @@ void error(int n)
 
 void writeBootImage(spiflash_t *spi)
 {
-
-
 uint32_t nFlashBytes;
 uint32_t flashAddress;
 int err;
+
    if (!nPages)
      printk("First load Image !");
    else {
@@ -181,12 +180,13 @@ int err;
      FLASH_HEADER->magic=C_MAGIC;
      FLASH_HEADER->nPages=nPages;
      FLASH_HEADER->brkAddress=brk_address;
-     err=flash_Overwrite(spi,FLASH_IMAGEBASE,4096,HEADER_BASE);
-     if (err!=SPIFLASH_OK) return;
-     flashAddress=FLASH_IMAGEBASE+4096;
 
+     //err=flash_Overwrite(spi,FLASH_IMAGEBASE,4096,HEADER_BASE);
+     //if (err!=SPIFLASH_OK) return;
+     //flashAddress=FLASH_IMAGEBASE+4096;
 
-     err=flash_Overwrite(spi,flashAddress,nFlashBytes,LOAD_BASE);
+     // TH 220420: Write Header + Image in one step
+     err=flash_Overwrite(spi,FLASH_IMAGEBASE,nFlashBytes+4096,HEADER_BASE);
 
    }
 
