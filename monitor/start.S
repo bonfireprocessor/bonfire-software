@@ -147,6 +147,8 @@ jal trap_handler
 
 LOAD  t1,33*REGBYTES(a0) // set epc
 csrw mepc,t1
+LOAD  t1,32*REGBYTES(a0)  // mstatus
+csrw mstatus,t1
 addi sp,sp, 37*4 // restore Trap handler SP
 csrw mscratch,sp // save SP
 // The SP of the trapped context will be restored below

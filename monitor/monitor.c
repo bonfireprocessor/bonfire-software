@@ -18,7 +18,10 @@
 #include "spi_driver.h"
 
 
-
+#if GDBSTUB==1
+#include "riscv-gdb-stub.h"
+static bool gdb_status = false;
+#endif
 
 
 #define LOAD_SIZE  (DRAM_SIZE-(long)LOAD_BASE)
@@ -52,7 +55,7 @@ typedef struct {
 int nPages=0;
 long recv_bytes=0;
 
-
+extern uint32_t  brk_address;
 
 
 static void handle_syscall(trapframe_t* tf)
@@ -74,6 +77,11 @@ char c;
         handle_syscall(ptf);
     else {
 
+  #if (GDBSTUB==1)
+        if (gdb_status) {
+             return handle_exception(ptf);
+        }
+  #endif
         printk("\nTrap cause: %lx\n",ptf->cause);
         dump_tf(ptf);
         c=readchar();
@@ -424,8 +432,17 @@ int err;
           gpio_test();
           break; 
 #endif 
+#if (GDBSTUB==1)
+       case 'Z':
+         if (!nArgs) args[0]=BAUDRATE;
+         printk("Connect debugger with %ld baud\n",args[0]);
+         gdb_setup_interface(args[0]);
+         gdb_status=true;
+         gdb_breakpoint();
+         break; 
+#endif 
        default:
-         writechar('\a'); // beep...
+         printk('\a?\n'); // beep...
       }
 
    }
