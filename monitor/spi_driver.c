@@ -26,9 +26,7 @@
 #define FLASH_DEV2     0x17
 
 
-#ifndef FLASH_ERASEBLOCK
-#define FLASH_ERASEBLOCK 4096
-#endif 
+
 
 
 typedef uint8_t t_flashid[3];
@@ -135,8 +133,39 @@ static const spiflash_hal_t my_spiflash_hal = {
   ._spiflash_wait = impl_spiflash_wait
 };
 
-const spiflash_cmd_tbl_t my_spiflash_cmds = SPIFLASH_CMD_TBL_STANDARD;
 
+#define SPIFLASH_CMD_TBL_64K \
+  (spiflash_cmd_tbl_t) { \
+    .write_disable = 0x04, \
+    .write_enable = 0x06, \
+    .page_program = 0x02, \
+    .read_data = 0x03, \
+    .read_data_fast = 0x0b, \
+    .write_sr = 0x01, \
+    .read_sr = 0x05, \
+    .block_erase_4 = 0x00, \
+    .block_erase_8 = 0x00, \
+    .block_erase_16 = 0x00, \
+    .block_erase_32 = 0x00, \
+    .block_erase_64 = 0xd8, \
+    .chip_erase = 0xc7, \
+    .device_id = 0x90, \
+    .jedec_id = 0x9f, \
+    .sr_busy_bit = 0x01, \
+  }
+
+#if (defined(NO_SUB_SECTOR_ERASE) && NO_SUB_SECTOR_ERASE==1 )
+#pragma message "SPI Flash using SPIFLASH_CMD_TBL_64K"
+const spiflash_cmd_tbl_t my_spiflash_cmds = SPIFLASH_CMD_TBL_64K;
+#ifndef FLASH_ERASEBLOCK
+#define FLASH_ERASEBLOCK 65536
+#endif 
+#else
+const spiflash_cmd_tbl_t my_spiflash_cmds = SPIFLASH_CMD_TBL_STANDARD;
+#ifndef FLASH_ERASEBLOCK
+#define FLASH_ERASEBLOCK 4096
+#endif 
+#endif
 
 const spiflash_config_t my_spiflash_config = {
   .sz = 1024*1024*8, // 8MB
@@ -146,14 +175,11 @@ const spiflash_config_t my_spiflash_config = {
   .addr_endian = SPIFLASH_ENDIANNESS_BIG, // normally big endianess on addressing
   .sr_write_ms = 10,
   .page_program_ms = 2,
-  .block_erase_4_ms = 0, // 100,
+  .block_erase_4_ms = 100,
   .block_erase_8_ms = 0, // not supported
   .block_erase_16_ms = 0, // not supported
-//#ifdef ARTY_AXI
-//  .block_erase_32_ms = 0,
-//#else    
-  .block_erase_32_ms = 0, // 175,
-//#endif  
+  
+  .block_erase_32_ms = 0, // 175, 
   .block_erase_64_ms = 300,
   .chip_erase_ms = 30000
 };

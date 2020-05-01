@@ -60,8 +60,12 @@ extern uint32_t  brk_address;
 
 static void handle_syscall(trapframe_t* tf)
 {
+#if (!defined (NO_SYSCALL))  
   tf->gpr[10] = do_syscall(tf->gpr[10], tf->gpr[11], tf->gpr[12], tf->gpr[13],
                            tf->gpr[14], tf->gpr[15], tf->gpr[17]);
+#else
+  tf->gpr[10] = -38; // ENOSYS
+#endif                           
   tf->epc += 4;
 }
 
@@ -442,7 +446,7 @@ int err;
          break; 
 #endif 
        default:
-         printk('\a?\n'); // beep...
+         printk("\a?\n"); // beep...
       }
 
    }
