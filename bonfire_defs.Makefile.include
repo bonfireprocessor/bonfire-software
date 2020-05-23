@@ -1,0 +1,29 @@
+PLATFORM?=ARTY_AXI
+ARCH=rv32im
+ABI=ilp32
+DEBUGFLAG?=NODEBUG
+
+UPLOAD_DIR?=~/upload
+
+TARGET_PREFIX ?= riscv32-unknown-elf
+TARGET_CC := $(TARGET_PREFIX)-gcc
+TARGET_LD := $(TARGET_PREFIX)-gcc
+TARGET_SIZE := $(TARGET_PREFIX)-size
+TARGET_OBJCOPY := $(TARGET_PREFIX)-objcopy
+HEXDUMP ?= hexdump
+
+PLATFORMDIR=$(HOME)/development/bonfire/bonfire-software/platform
+
+LINKDEF_DRAM=bonfire_dram.ld
+LINKDEF?=$(PLATFORMDIR)/$(PLATFORM)/firmware.ld
+BOOTLINK=wildfboot.ld
+
+TARGET_CFLAGS +=  -march=$(ARCH) -mabi=$(ABI) -Wall -Og -g  -fomit-frame-pointer -fno-inline-functions-called-once  \
+	-ffreestanding -fno-builtin  -mstrict-align \
+	-Wall -Werror=implicit-function-declaration \
+	-DBONFIRE -D$(PLATFORM) -D$(DEBUGFLAG) -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM)  \
+    -I$(PICODIR)/include -I$(PICODIR)/include/arch -DRISCV32
+
+
+TARGET_LDFLAGS_SYSCALL += -march=$(ARCH) -mabi=$(ABI)   \
+	 -Wl,--gc-sections  -Wl,-T$(LINKDEF_DRAM) 
