@@ -5,6 +5,7 @@ ARCH ?= rv32im
 ABI=ilp32
 PLATFORM ?= ARTY_AXI
 
+DEFINES = -DGDBSTUB=1 -DBONFIRE -DNO_SYSCALL -DDEBUG
 
 UART?=uart
 TARGETDIR ?= ~/upload
@@ -27,20 +28,25 @@ LINKDEF=./ram_monitor.ld
 
 TARGET_NAME=$(PLATFORM)ram_monitor
 
+GDBSTUB=../gdb-stub 
 
-TARGET_CFLAGS += -march=$(ARCH) -mabi=$(ABI)   -Wall -Os -g -fomit-frame-pointer \
+TARGET_CFLAGS += -march=$(ARCH) -mabi=$(ABI)   -Wall -Og -g -fomit-frame-pointer \
 	-ffreestanding -fno-builtin  -mstrict-align \
 	-Wall -Werror=implicit-function-declaration \
-	-D$(PLATFORM) -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM) -I./spiflash_driver/src -I../riscv  -I.
+	-D$(PLATFORM) $(DEFINES) \
+	-I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM) -I$(GDBSTUB)  -I./spiflash_driver/src -I../riscv  -I.
 
 TARGET_LDFLAGS += -march=$(ARCH) -mabi=$(ABI) -nostartfiles  \
 	-Wl,-m,elf32lriscv --specs=nano.specs -Wl,-T$(LINKDEF) \
 	-Wl,--gc-sections
 
 
+
 OBJECTS = start.o monitor.o $(UART).o snprintf.o string.o console.o mempattern.o xm.o spiflash.o syscall.o spi_driver.o testdcache.o
 
+include ../gdb-stub/Makefile.include
 
+vpath %.c spiflash_driver/src:$(GDBSTUB) 
 
 %.bin : $(TARGET_NAME).elf
 		$(TARGET_PREFIX)-objcopy -S -O binary $<  $@
@@ -65,10 +71,6 @@ OBJECTS = start.o monitor.o $(UART).o snprintf.o string.o console.o mempattern.o
 	$(TARGET_PREFIX)-objdump -S -d $< >$(basename $@).lst
 	$(TARGET_PREFIX)-objdump -s $< >$(basename $@).dmp
 	$(TARGET_PREFIX)-size  $<
-
-
-spiflash.o : spiflash_driver/src/spiflash.c
-	$(TARGET_CC) $(TARGET_CFLAGS) -c $<
 
 
 

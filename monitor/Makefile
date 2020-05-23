@@ -36,7 +36,7 @@ TARGET_CFLAGS += -march=$(ARCH) -mabi=$(ABI)   -Wall -Os -g -fomit-frame-pointer
 	-D$(PLATFORM) -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM) -I./spiflash_driver/src -I../riscv  -I.
 
 TARGET_LDFLAGS += -march=$(ARCH) -mabi=$(ABI) -nostartfiles  \
-	-Wl,-m,elf32lriscv --specs=nano.specs -Wl,-T$(LINKDEF) \
+	-Wl,-m,elf32lriscv  -Wl,-T$(LINKDEF) \
 	-Wl,--gc-sections
 
 

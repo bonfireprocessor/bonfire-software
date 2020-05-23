@@ -18,7 +18,10 @@
 #include "spi_driver.h"
 
 
-
+#if GDBSTUB==1
+#include "riscv-gdb-stub.h"
+static bool gdb_status = false;
+#endif
 
 
 #define LOAD_SIZE  (DRAM_SIZE-(long)LOAD_BASE)
@@ -52,13 +55,17 @@ typedef struct {
 int nPages=0;
 long recv_bytes=0;
 
-
+extern uint32_t  brk_address;
 
 
 static void handle_syscall(trapframe_t* tf)
 {
+#if (!defined (NO_SYSCALL))  
   tf->gpr[10] = do_syscall(tf->gpr[10], tf->gpr[11], tf->gpr[12], tf->gpr[13],
                            tf->gpr[14], tf->gpr[15], tf->gpr[17]);
+#else
+  tf->gpr[10] = -38; // ENOSYS
+#endif                           
   tf->epc += 4;
 }
 
@@ -74,6 +81,11 @@ char c;
         handle_syscall(ptf);
     else {
 
+  #if (GDBSTUB==1)
+        if (gdb_status) {
+             return handle_exception(ptf);
+        }
+  #endif
         printk("\nTrap cause: %lx\n",ptf->cause);
         dump_tf(ptf);
         c=readchar();
@@ -141,7 +153,7 @@ void printInfo()
 {
 
 
-  printk("\nBonfire Boot Monitor 0.3f (20190330) (GCC %s)\n",__VERSION__);
+  printk("\nBonfire Boot Monitor 0.3g (20200425) (GCC %s)\n",__VERSION__);
   printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUptime %d sec\n",
          read_csr(mimpid),read_csr(misa),
          getDivisor(),sys_time(NULL));
@@ -162,11 +174,10 @@ void error(int n)
 
 void writeBootImage(spiflash_t *spi)
 {
-
-
 uint32_t nFlashBytes;
 uint32_t flashAddress;
 int err;
+
    if (!nPages)
      printk("First load Image !");
    else {
@@ -181,12 +192,13 @@ int err;
      FLASH_HEADER->magic=C_MAGIC;
      FLASH_HEADER->nPages=nPages;
      FLASH_HEADER->brkAddress=brk_address;
-     err=flash_Overwrite(spi,FLASH_IMAGEBASE,4096,HEADER_BASE);
-     if (err!=SPIFLASH_OK) return;
-     flashAddress=FLASH_IMAGEBASE+4096;
 
+     //err=flash_Overwrite(spi,FLASH_IMAGEBASE,4096,HEADER_BASE);
+     //if (err!=SPIFLASH_OK) return;
+     //flashAddress=FLASH_IMAGEBASE+4096;
 
-     err=flash_Overwrite(spi,flashAddress,nFlashBytes,LOAD_BASE);
+     // TH 220420: Write Header + Image in one step
+     err=flash_Overwrite(spi,FLASH_IMAGEBASE,nFlashBytes+4096,HEADER_BASE);
 
    }
 
@@ -424,8 +436,17 @@ int err;
           gpio_test();
           break; 
 #endif 
+#if (GDBSTUB==1)
+       case 'Z':
+         if (!nArgs) args[0]=BAUDRATE;
+         printk("Connect debugger with %ld baud\n",args[0]);
+         gdb_setup_interface(args[0]);
+         gdb_status=true;
+         gdb_breakpoint();
+         break; 
+#endif 
        default:
-         writechar('\a'); // beep...
+         printk("\a?\n"); // beep...
       }
 
    }

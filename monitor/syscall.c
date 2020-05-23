@@ -1,5 +1,7 @@
 // See LICENSE for license details.
 
+
+
 #include "bonfire.h"
 #include <sys/errno.h>
 #include "syscall.h"
@@ -13,9 +15,40 @@
 
 typedef long (*syscall_t)(long, long, long, long, long, long, long);
 
+
+// functions and globals required also when no syscall interface is compiled in 
+
 uint32_t  brk_address = (uint32_t) LOAD_BASE;
 
 #define BRK_MAX  (DRAM_TOP-(256*1024))// reserve 256KB as stackspace
+
+
+
+uint64_t get_timer_value()
+{
+#if __riscv_xlen == 32
+  while (1) {
+    uint32_t hi = read_csr(mcycleh);
+    uint32_t lo = read_csr(mcycle);
+    if (hi == read_csr(mcycleh))
+      return ((uint64_t)hi << 32) | lo;
+  }
+#else
+  return read_csr(mcycle);
+#endif
+}
+
+
+long sys_time(long* loc)
+{
+  long t = get_timer_value() / SYSCLK;
+  if (loc) *loc = t;
+ 
+  return t;
+}
+
+
+#if (!defined (NO_SYSCALL))
 
 void sys_exit(int code)
 {
@@ -150,28 +183,7 @@ uintptr_t sys_mprotect(uintptr_t addr, size_t length, int prot)
    return  -EBADF;
 }
 
-uint64_t get_timer_value()
-{
-#if __riscv_xlen == 32
-  while (1) {
-    uint32_t hi = read_csr(mcycleh);
-    uint32_t lo = read_csr(mcycle);
-    if (hi == read_csr(mcycleh))
-      return ((uint64_t)hi << 32) | lo;
-  }
-#else
-  return read_csr(mcycle);
-#endif
-}
 
-
-long sys_time(long* loc)
-{
-  long t = get_timer_value() / SYSCLK;
-  if (loc) *loc = t;
- 
-  return t;
-}
 
 int sys_times(long* loc)
 {
@@ -283,3 +295,5 @@ long do_syscall(long a0, long a1, long a2, long a3, long a4, long a5, unsigned l
 
   return f(a0, a1, a2, a3, a4, a5, n);
 }
+
+#endif
