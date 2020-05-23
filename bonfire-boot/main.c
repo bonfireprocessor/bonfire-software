@@ -75,7 +75,7 @@ char adr_b[16],gw_b[16],netmask_b[16],dns_b[16];
 
 }
 
-extern void app_tcpecho(uint16_t source_port);
+//extern void app_tcpecho(uint16_t source_port);
 
 int main(void)
 {
@@ -113,7 +113,7 @@ int main(void)
     if (id == -1)
         return -1;
 
-    app_tcpecho(5050);
+    //app_tcpecho(5050);
     /* keep running stack ticks to have picoTCP do its network magic. Note that
      * you can do other stuff here as well, or sleep a little. This will impact
      * your network performance, but everything should keep working (provided
