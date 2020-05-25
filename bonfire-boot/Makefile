@@ -1,7 +1,10 @@
-.PHONY: build_picotcp fuck all
+.PHONY: build_picotcp fuck all clean
 
 PICO_ROOT?=picotcp
 PICO_BUILD=$(PICO_ROOT)/build_rv32
+
+TARGET_NAME = bonfire-boot
+OBJECTS = $(BUILD)/main.o  $(BUILD)/sys.o  $(BUILD)/xil_etherlite.o $(BUILD)/ethernet_driver.o 
 
 include  ../bonfire_defs.Makefile.include
 
@@ -13,17 +16,17 @@ PICO_MIN_OPTIONS?= IPFILTER=0 DHCP_SERVER=0 NAT=0 MCAST=0  \
 	 		       PPP=0 IPV6=0 AODV=0 MDNS=0 TFTP=1 TCP=0
 
 
-
 build_picotcp:
 	cd $(PICO_ROOT) \
 	make -f riscvcross.mk PICO_OPTIONS="$(PICO_MIN_OPTIONS)" build
 
-TARGET_NAME = bonfire-boot
-
-OBJECTS = $(BUILD)/main.o  $(BUILD)/sys.o  $(BUILD)/xil_etherlite.o $(BUILD)/ethernet_driver.o 
 
 
-all: build/bonfire-boot.elf
+
+all: build/bonfire-boot.bin
 
 fuck: $(OBJECTS)
 	echo $(TARGET_CFLAGS)
+
+clean:
+	rm -f $(BUILD)/*	
