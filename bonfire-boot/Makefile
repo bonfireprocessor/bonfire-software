@@ -4,7 +4,9 @@ PICO_ROOT?=picotcp
 PICO_BUILD=$(PICO_ROOT)/build_rv32
 
 TARGET_NAME = bonfire-boot
-OBJECTS = $(BUILD)/main.o  $(BUILD)/sys.o  $(BUILD)/xil_etherlite.o $(BUILD)/ethernet_driver.o 
+OBJECTS = $(BUILD)/main.o  $(BUILD)/sys.o  $(BUILD)/xil_etherlite.o $(BUILD)/ethernet_driver.o \
+		  $(BUILD)/tftp.o \
+		  $(BUILD)/uart.o $(BUILD)/console.o $(BUILD)/monitor.o	$(BUILD)/snprintf.o
 
 include  ../bonfire_defs.Makefile.include
 

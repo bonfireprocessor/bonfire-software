@@ -1,3 +1,4 @@
+#include "bonfire.h"
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -8,15 +9,18 @@
 #include "pico_icmp4.h"
 #include "pico_dhcp_client.h"
 #include "pico_ethernet.h"
-
-
-
+#include "pico_dns_client.h"
+#include "monitor.h"
+#include "console.h"
+#include "uart.h"
 
 #define NUM_PING 10
 
- 
+extern bool enable_debug;
 
 static int finished = 0;
+
+
 
 /* gets called when the ping receives a reply, or encounters a problem */
 void cb_ping(struct pico_icmp4_stats *s)
@@ -25,13 +29,13 @@ void cb_ping(struct pico_icmp4_stats *s)
     pico_ipv4_to_string(host, s->dst.addr);
     if (s->err == 0) {
         /* if all is well, print some pretty info */
-        printf("%lu bytes from %s: icmp_req=%lu ttl=%lu time=%lu ms\n", s->size,
+        dbg("%lu bytes from %s: icmp_req=%lu ttl=%lu time=%lu ms\n", s->size,
                 host, s->seq, s->ttl, (long unsigned int)s->time);
         if (s->seq >= NUM_PING)
             finished = 1;
     } else {
         /* if something went wrong, print it and signal we want to stop */
-        printf("PING %lu to %s: Error %d\n", s->seq, host, s->err);
+        dbg("PING %lu to %s: Error %d\n", s->seq, host, s->err);
         finished = 1;
     }
 }
@@ -48,7 +52,7 @@ struct pico_ip4 address, gw, netmask, dns;
 
 char adr_b[16],gw_b[16],netmask_b[16],dns_b[16]; 
 
-   printf("DHCP callback %d\n",code);
+   dbg("DHCP callback %d\n",code);
 
    switch(code) {
      
@@ -63,19 +67,27 @@ char adr_b[16],gw_b[16],netmask_b[16],dns_b[16];
         pico_ipv4_to_string(netmask_b,netmask.addr);
         pico_ipv4_to_string(dns_b,dns.addr);
 
-        printf("DHCP assigned  ip: %s mask: %s gw: %s dns: %s \n",
-                adr_b,netmask_b,gw_b,dns_b); 
+        dbg("DHCP assigned  ip: %s mask: %s gw: %s dns: %s \n",
+                adr_b,netmask_b,gw_b,dns_b);
 
+        if (dns.addr) {
+          pico_dns_client_nameserver(&dns,PICO_DNS_NS_ADD);
+          struct pico_ip4 default_ns;
+          if (pico_string_to_ipv4(PICO_DNS_NS_DEFAULT, (uint32_t *)&default_ns.addr) >= 0) {
+              pico_dns_client_nameserver(&default_ns,PICO_DNS_NS_DEL);
+          }        
+        }
         dhcp_succes=true;
 
         break;
-     case PICO_DHCP_ERROR: printf("DHCP Error\n"); break;
+     case PICO_DHCP_ERROR: dbg("DHCP Error\n"); break;
 
    }
 
 }
 
 //extern void app_tcpecho(uint16_t source_port);
+extern void tftp_server_main();
 
 int main(void)
 {
@@ -83,8 +95,12 @@ int main(void)
     struct pico_ip4 ipaddr, netmask;
     struct pico_device* dev;
     uint32_t cid;
+    unsigned long timeout;
 
-   
+    setBaudRate(BAUDRATE);
+    #ifndef SIM
+      wait(1000000);
+    #endif
 
     /* initialise the stack. Super important if you don't want ugly stuff like
      * segfaults and such! */
@@ -103,15 +119,15 @@ int main(void)
    
     pico_dhcp_initiate_negotiation(dev,cb_dhcp,&cid);
 
-    while (!dhcp_succes){
+    timeout = PICO_TIME() + 10; // Wait max. 10 seconds for DHCP
+    while (!dhcp_succes && PICO_TIME()<timeout ){
        pico_stack_tick();
     }; // Wait until DHCP address assigend 
+    if (!dhcp_succes) printk("DHCP no response, still trying\n");
+    enable_debug=false;
+    //dbg("starting ping\n");
+    //id = pico_icmp4_ping("192.168.26.2", NUM_PING, 1000, 10000, 64, cb_ping);
 
-    printf("starting ping\n");
-    id = pico_icmp4_ping("192.168.26.2", NUM_PING, 1000, 10000, 64, cb_ping);
-
-    if (id == -1)
-        return -1;
 
     //app_tcpecho(5050);
     /* keep running stack ticks to have picoTCP do its network magic. Note that
@@ -119,13 +135,8 @@ int main(void)
      * your network performance, but everything should keep working (provided
      * you don't go overboard with the delays). */
    
-    
-    while (1)
-    {
-        
-        pico_stack_tick();
-    }
-
-    printf("finished !\n");
+    tftp_server_main();
+    mon_main();
+   
     return 0;
 }
