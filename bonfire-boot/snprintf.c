@@ -38,18 +38,27 @@ int vsnprintf(char* out, size_t n, const char* s, va_list vl)
           break;
         }
         case 'd':
+        case 'u':
         {
-          long num = longarg ? va_arg(vl, long) : va_arg(vl, int);
-          if (num < 0) {
-            num = -num;
-            if (++pos < n) out[pos-1] = '-';
+          unsigned long unum;
+          if (*s=='d') {
+            long num = longarg ? va_arg(vl, long) : va_arg(vl, int);
+            if (num < 0) {
+              unum = (unsigned long) -num;
+              if (++pos < n) out[pos-1] = '-';
+            } else {
+              unum = (unsigned long) num;
+            }
+          } else { // %u case...
+             unum = longarg ? va_arg(vl, unsigned long) : va_arg(vl, unsigned int);
           }
+          
           long digits = 1;
-          for (long nn = num; nn /= 10; digits++)
+          for (unsigned long nn = unum; nn /= 10; digits++)
             ;
           for (int i = digits-1; i >= 0; i--) {
-            if (pos + i + 1 < n) out[pos + i] = '0' + (num % 10);
-            num /= 10;
+            if (pos + i + 1 < n) out[pos + i] = '0' + (unum % 10);
+            unum /= 10;
           }
           pos += digits;
           longarg = false;
