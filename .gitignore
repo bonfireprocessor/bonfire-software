@@ -4,6 +4,7 @@
 *.elf
 *.dmp
 *.lst
+*.a
 /riscv/software/cpptest/hello
 *.bit
 *.txt

@@ -1,3 +1,6 @@
 [submodule "picotcp"]
 	path = picotcp
 	url = git@github.com:ThomasHornschuh/picotcp.git
+[submodule "spiffs"]
+	path = spiffs
+	url = https://github.com/pellepl/spiffs.git

@@ -8,6 +8,7 @@ UPLOAD_DIR?=~/upload
 TARGET_PREFIX ?= riscv32-unknown-elf
 TARGET_CC := $(TARGET_PREFIX)-gcc
 TARGET_LD := $(TARGET_PREFIX)-gcc
+TARGET_AR := $(TARGET_PREFIX)-ar 
 TARGET_SIZE := $(TARGET_PREFIX)-size
 TARGET_OBJCOPY := $(TARGET_PREFIX)-objcopy
 HEXDUMP ?= hexdump
@@ -16,7 +17,7 @@ PLATFORMDIR=$(HOME)/development/bonfire/bonfire-software/platform
 
 LINKDEF_DRAM=$(PLATFORMDIR)/$(PLATFORM)/bonfire_dram.ld
 LINKDEF?=$(PLATFORMDIR)/$(PLATFORM)/firmware.ld
-BOOTLINK=wildfboot.ld
+
 
 TARGET_CFLAGS +=  -march=$(ARCH) -mabi=$(ABI) -Wall -Og -g  -fomit-frame-pointer -fno-inline-functions-called-once  \
 	-ffreestanding -fno-builtin  -mstrict-align \
