@@ -4,13 +4,24 @@ PICO_ROOT?=picotcp
 PICO_BUILD=$(PICO_ROOT)/build_rv32
 
 TARGET_NAME = bonfire-boot
+
+# SPIFFS
+spiffs?=spiffs
+include spiffs/files.mk
+# the above include will append to CPATH, CFILES FLAGS and INC
+SPIFFS_OBJ = $(CFILES:%.c=${BUILD}/%.o)
+
 OBJECTS = $(BUILD)/main.o  $(BUILD)/sys.o  $(BUILD)/xil_etherlite.o $(BUILD)/ethernet_driver.o \
-		  $(BUILD)/tftp.o \
-		  $(BUILD)/uart.o $(BUILD)/console.o $(BUILD)/monitor.o	$(BUILD)/snprintf.o
+		  $(BUILD)/tftp.o  $(BUILD)/spi.o  \
+		  $(BUILD)/uart.o $(BUILD)/console.o $(BUILD)/monitor.o	$(BUILD)/snprintf.o \
+		  $(BUILD)/spiflash.o $(BUILD)/spiffs_hal.o  $(SPIFFS_OBJ)
+
+vpath %.c spiflash_driver/src $(CPATH)
+
 
 include  ../bonfire_defs.Makefile.include
 
-TARGET_CFLAGS += -I$(PICO_BUILD)/include -I$(PICO_BUILD)/include/arch -DRISCV32
+TARGET_CFLAGS += -I. -I$(PICO_BUILD)/include -I$(PICO_BUILD)/include/arch -Ispiflash_driver/src  $(FLAGS) $(INC)  -DRISCV32
 LIBS += -L$(PICO_BUILD)/lib -lpicotcp
 
 PICO_MIN_OPTIONS?= IPFILTER=0 DHCP_SERVER=0 NAT=0 MCAST=0  \
@@ -23,11 +34,7 @@ build_picotcp:
 
 
 
-
 all: build/bonfire-boot.bin
-
-fuck: $(OBJECTS)
-	echo $(TARGET_CFLAGS)
 
 clean:
 	rm -f $(BUILD)/*	

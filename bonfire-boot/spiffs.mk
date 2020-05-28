@@ -22,4 +22,4 @@ $(TARGET) : $(OBJFILES)
 build: $(TARGET)
 
 test:
-	echo $(OBJFILES)
+	echo $(OBJFILES) ; echo $(CFILES)

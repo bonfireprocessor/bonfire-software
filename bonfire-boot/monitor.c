@@ -9,6 +9,7 @@
 #include "monitor.h"
 #include "uart.h"
 #include "console.h"
+#include "spi.h"
 
 #include "pico_stack.h"
 
@@ -55,7 +56,7 @@ typedef struct {
 int nPages=0;
 long recv_bytes=0;
 
-extern uint32_t  brk_address;
+uint32_t  brk_address;
 
 
 // void xm_send(u8 c)
@@ -152,11 +153,7 @@ int err;
      FLASH_HEADER->magic=C_MAGIC;
      FLASH_HEADER->nPages=nPages;
      FLASH_HEADER->brkAddress=brk_address;
-
-     //err=flash_Overwrite(spi,FLASH_IMAGEBASE,4096,HEADER_BASE);
-     //if (err!=SPIFLASH_OK) return;
-     //flashAddress=FLASH_IMAGEBASE+4096;
-
+  
      // TH 220420: Write Header + Image in one step
      err=flash_Overwrite(spi,FLASH_IMAGEBASE,nFlashBytes+4096,HEADER_BASE);
 
@@ -365,10 +362,11 @@ int err;
 
        case 'R': // Load Boot Image from Flash and run
          if (readBootImage(spi)==SPIFLASH_OK) {
-            flush_dache();
-            clear_csr(mstatus,MSTATUS_MIE);
+            // Temporarily disabled for testing
+            // flush_dache();
+            // clear_csr(mstatus,MSTATUS_MIE);
 
-            start_user((uint32_t)LOAD_BASE,USER_STACK );
+            // start_user((uint32_t)LOAD_BASE,USER_STACK );
          }
          break;
 

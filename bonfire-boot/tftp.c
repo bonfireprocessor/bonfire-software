@@ -75,7 +75,7 @@ t_file_ctx *ctx;
 uint8_t * buffer = (uint8_t*)BUFFER_ADDRESS; // malloc(MAX_FILESIZE);
 
     if (buffer) {
-        tftplog("Alloced buffer at %lx\n",buffer);
+        tftplog("Allocated buffer at %lx\n",buffer);
         ctx=malloc(sizeof(ctx));
         ctx->opcode = opcode;
         ctx->buffer = buffer;
@@ -111,7 +111,7 @@ char ip_s[16];
         } else {
           session = pico_tftp_session_setup(addr,PICO_PROTO_IPV4);
           pico_tftp_start_rx(session,port,filename,cb_tftp_txrx,ctx);
-          tftplog("tftp %s session %lx for %s\n",opcode==PICO_TFTP_RRQ?"tx":"rx", (uint32_t)session, filename);  
+          tftplog("tftp put session %lx for %s\n", (uint32_t)session, filename);  
         }
         break;
     default:
@@ -127,4 +127,3 @@ void tftp_server_main()
    int err=pico_tftp_listen(PICO_PROTO_IPV4,tftp_server_callback);
    tftplog(err?"tfp start failed\n":"tftp start sucessfull\n");
 }
-

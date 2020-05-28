@@ -1,6 +1,8 @@
 #ifndef __MONITOR_H
 #define __MONITOR_H
 
+#include <stdint.h>
+
 //#define LOAD_BASE ((void*)0x010000)
 #define LOAD_BASE ((void*)0x08000000)
 
@@ -28,10 +30,11 @@ void delay_loop(uint32_t count);
 
 void test_dcache(int n);
 void print_cache_size();
+uint64_t platform_timer_read_sys( void );
 
 int mon_main();
 
-#define NO_FLASH
+//#define NO_FLASH
 #define NO_SYSCALL
 #define NO_XMODEM
 #define NO_DRAMTEST
