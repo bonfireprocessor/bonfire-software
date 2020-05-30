@@ -31,7 +31,7 @@ const char *trans_error = "out of memory error, aborting transfer\n";
 
 long new_size;
 
-
+tftplog("Event %d, ctx: %lx\n",event,arg);
 switch (event) {
 
     case PICO_TFTP_EV_OK:
@@ -48,7 +48,7 @@ switch (event) {
               pico_tftp_abort(session,-1,trans_error);
               return 0;
             } else {
-                printk("%lx<-%lx (%d) \n",ctx->buffer+ctx->size,block,_len);
+                //printk("size %ld, %lx<-%lx (%d) \n",ctx->size,ctx->buffer+ctx->size,block,_len);
                 memcpy(ctx->buffer+ctx->size,block,_len);
                 ctx->size = new_size;
             }
@@ -57,13 +57,13 @@ switch (event) {
       break;
     case PICO_TFTP_EV_ERR_PEER:
     case PICO_TFTP_EV_ERR_LOCAL:
-      tftplog("tftp error  %s at session %lx\n",(char*)block, (uint32_t)session);
+      tftplog("tftp error %s at session %lx\n",(char*)block, (uint32_t)session);
       break;
     case  PICO_TFTP_EV_SESSION_CLOSE:
       tftplog("tftp  session %lx closed transfered %ld bytes to %lx\n",(uint32_t)session,ctx->size,ctx->buffer);
       if (ctx->opcode==PICO_TFTP_WRQ && ctx->size>0) {
          if (spiffs_save(ctx->filename,ctx->buffer,ctx->size)==0) {
-           tftplog("file saved to flash");
+           tftplog("file saved to flash\n");
          };
 
       }
@@ -83,14 +83,14 @@ t_file_ctx *ctx;
 uint8_t * buffer = (uint8_t*)BUFFER_ADDRESS; // malloc(MAX_FILESIZE);
 
     if (buffer) {
-        tftplog("Allocated buffer at %lx\n",buffer);
-        ctx=malloc(sizeof(ctx)); 
+        //tftplog("Allocated buffer at %lx\n",buffer);
+        ctx=malloc(sizeof(t_file_ctx)); 
         if (ctx) {
-          tftplog("Allocated ctx at %lx\n",ctx);
-          strncpy(ctx->filename,filename,sizeof(ctx->filename)-1);
+          //tftplog("Allocated ctx at %lx\n",ctx);
+          strncpy(&(ctx->filename),filename,63);
           ctx->opcode = opcode;
           ctx->buffer = buffer;
-          tftplog("ctx buffer: %lx\n",ctx->buffer);
+          //tftplog("ctx buffer: %lx filename: %s\n",ctx->buffer,ctx->filename);
           ctx->size = 0;
         }
         return ctx;
