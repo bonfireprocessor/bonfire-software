@@ -223,6 +223,8 @@
 #if SPIFFS_SINGLETON
 // Instead of giving parameters in config struct, singleton build must
 // give parameters in defines below.
+
+
 #ifndef SPIFFS_CFG_PHYS_SZ
 #define SPIFFS_CFG_PHYS_SZ(ignore)        (1024*1024*8) // 8MB total size 
 #endif

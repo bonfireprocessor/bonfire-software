@@ -10,6 +10,7 @@
 #include "uart.h"
 #include "console.h"
 #include "spi.h"
+#include "spiffs_hal.h"
 
 #include "pico_stack.h"
 
@@ -234,6 +235,8 @@ int err;
 #if (!defined (NO_FLASH))
    spiflash_t *spi;
    spi=flash_init();
+   //spiffs_init(spi,4096);
+   
 #endif    
 
    #ifdef SIM

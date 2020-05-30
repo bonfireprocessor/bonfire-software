@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "console.h"
 #include "monitor.h"
+#include "spiffs_hal.h"
 
 #include "pico_stack.h"
 #include "pico_ipv4.h"
@@ -13,6 +14,7 @@
 #define MAX_FILESIZE (16 * 1024 * 1024) // 16 Megabyte
 
 typedef  struct {
+  char filename[64];
   uint16_t opcode;
   uint8_t *buffer;
   unsigned long size;
@@ -46,7 +48,7 @@ switch (event) {
               pico_tftp_abort(session,-1,trans_error);
               return 0;
             } else {
-                //printk("%lx<-%lx (%d) \n",ctx->buffer+ctx->size,block,_len);
+                printk("%lx<-%lx (%d) \n",ctx->buffer+ctx->size,block,_len);
                 memcpy(ctx->buffer+ctx->size,block,_len);
                 ctx->size = new_size;
             }
@@ -59,6 +61,12 @@ switch (event) {
       break;
     case  PICO_TFTP_EV_SESSION_CLOSE:
       tftplog("tftp  session %lx closed transfered %ld bytes to %lx\n",(uint32_t)session,ctx->size,ctx->buffer);
+      if (ctx->opcode==PICO_TFTP_WRQ && ctx->size>0) {
+         if (spiffs_save(ctx->filename,ctx->buffer,ctx->size)==0) {
+           tftplog("file saved to flash");
+         };
+
+      }
       //free(ctx->buffer);
       free(ctx);
       break;
@@ -76,10 +84,15 @@ uint8_t * buffer = (uint8_t*)BUFFER_ADDRESS; // malloc(MAX_FILESIZE);
 
     if (buffer) {
         tftplog("Allocated buffer at %lx\n",buffer);
-        ctx=malloc(sizeof(ctx));
-        ctx->opcode = opcode;
-        ctx->buffer = buffer;
-        ctx->size = 0;
+        ctx=malloc(sizeof(ctx)); 
+        if (ctx) {
+          tftplog("Allocated ctx at %lx\n",ctx);
+          strncpy(ctx->filename,filename,sizeof(ctx->filename)-1);
+          ctx->opcode = opcode;
+          ctx->buffer = buffer;
+          tftplog("ctx buffer: %lx\n",ctx->buffer);
+          ctx->size = 0;
+        }
         return ctx;
     } else
     {

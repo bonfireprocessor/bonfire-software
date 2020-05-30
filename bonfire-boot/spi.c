@@ -187,21 +187,6 @@ static spiflash_t spif;
 
 
 
-
-// bool spiflash_test()
-// {
-// t_flashid id;
-
-
-
-//     spiflash_init();
-//     spiflash_getid(&id);
-//     printk("Flash id %x %x %x\n",id[0],id[1],id[2]);
-
-//     return (id[0]==FLASH_MAN && id[1]==FLASH_DEV1 && id[2]==FLASH_DEV2);
-
-// }
-
 spiflash_t* flash_init()
 {
 uint32_t  jedec_id;

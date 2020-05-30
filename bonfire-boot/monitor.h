@@ -32,6 +32,8 @@ void test_dcache(int n);
 void print_cache_size();
 uint64_t platform_timer_read_sys( void );
 
+
+
 int mon_main();
 
 //#define NO_FLASH
