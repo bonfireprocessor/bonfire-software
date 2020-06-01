@@ -101,8 +101,22 @@ char buffer[257];
         }
         
     } else  {
-      printk(option_error);
+      printk("usage rm <filename>\n");
       return -1;
+    }
+}
+
+int mv_cmd(int argc,char **argv)
+{
+    if (argc==3) {
+        int32_t result = SPIFFS_rename(&fs,argv[1],argv[2]);
+        if (result!=SPIFFS_OK) {
+            printk("mv failed, error %ld\n",result);
+        }
+        return result;
+    } else {
+      printk("usage mv <source> <dest>\n");
+      return -1; 
     }
 }
 
@@ -112,6 +126,7 @@ t_shellcomand cmds[] = {
    {"fsinfo",fsinfo_cmd},
    {"rm",rm_cmd},
    {"cat",cat_cmd},
+   {"mv",mv_cmd},
    {"exit", NULL},
    {NULL, NULL}
 };

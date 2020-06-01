@@ -18,27 +18,41 @@ typedef  struct {
   uint16_t opcode;
   uint8_t *buffer;
   unsigned long size;
+  spiffs_file fd;
 } t_file_ctx;
 
 #define BUFFER_ADDRESS LOAD_BASE // temporary hack !!!!!
-                                        
+
+static bool buffer_busy = false;                                        
 
 static int cb_tftp_txrx(struct pico_tftp_session *session, uint16_t event,
                         uint8_t *block, int32_t _len, void *arg)
 {
 t_file_ctx *ctx = (t_file_ctx *)arg;  
-const char *trans_error = "out of memory error, aborting transfer\n"; 
+const char *trans_error = "interal error, aborting transfer\n"; 
 
 long new_size;
 
-tftplog("Event %d, ctx: %lx\n",event,arg);
+
 switch (event) {
 
     case PICO_TFTP_EV_OK:
      
       if ( ctx->opcode==PICO_TFTP_RRQ ) {
-          pico_tftp_abort(session,-1,trans_error);
-          return 0;
+          int32_t result;
+          uint8_t buffer[PICO_TFTP_PAYLOAD_SIZE];
+
+          if ( SPIFFS_eof(&fs,ctx->fd) ) {
+            result = 0;
+          } else {
+            result = SPIFFS_read(&fs,ctx->fd,buffer,PICO_TFTP_PAYLOAD_SIZE);
+            if ( result<0 ) {
+              pico_tftp_abort(session,-1,trans_error);
+              return 0;
+            }
+          }  
+          pico_tftp_send(session,buffer,result);
+          
       } else {
          //recevice
          if ( _len>0 ) {
@@ -60,14 +74,15 @@ switch (event) {
       tftplog("tftp error %s at session %lx\n",(char*)block, (uint32_t)session);
       break;
     case  PICO_TFTP_EV_SESSION_CLOSE:
-      tftplog("tftp  session %lx closed transfered %ld bytes to %lx\n",(uint32_t)session,ctx->size,ctx->buffer);
+      tftplog("tftp  session %lx closed transfered %ld bytes\n",(uint32_t)session,ctx->size);
       if (ctx->opcode==PICO_TFTP_WRQ && ctx->size>0) {
+         tftplog("writing...\n");
          if (spiffs_save(ctx->filename,ctx->buffer,ctx->size)==0) {
-           tftplog("file saved to flash\n");
+           tftplog("file %s written to flash\n",ctx->filename);
          };
 
       }
-      //free(ctx->buffer);
+      buffer_busy = false;
       free(ctx);
       break;
     default:
@@ -81,23 +96,38 @@ static t_file_ctx *open_file(char * filename, char* mode, uint16_t opcode)
 {
 t_file_ctx *ctx;
 uint8_t * buffer = (uint8_t*)BUFFER_ADDRESS; // malloc(MAX_FILESIZE);
+spiffs_file fd = -1;
 
-    if (buffer) {
-        //tftplog("Allocated buffer at %lx\n",buffer);
-        ctx=malloc(sizeof(t_file_ctx)); 
-        if (ctx) {
-          //tftplog("Allocated ctx at %lx\n",ctx);
-          strncpy(&(ctx->filename),filename,63);
-          ctx->opcode = opcode;
-          ctx->buffer = buffer;
-          //tftplog("ctx buffer: %lx filename: %s\n",ctx->buffer,ctx->filename);
-          ctx->size = 0;
-        }
-        return ctx;
-    } else
-    {
-        return NULL;
-    }
+  switch(opcode) {
+    case PICO_TFTP_RRQ:
+        fd = SPIFFS_open(&fs,filename,SPIFFS_O_RDONLY,0);
+        if (fd<0) return NULL;
+        break;
+
+    case PICO_TFTP_WRQ:
+        if (buffer_busy) return NULL;
+        buffer_busy = true;
+        break;
+
+    default:
+      return NULL;  
+      
+  }
+  ctx=malloc(sizeof(t_file_ctx)); 
+  if (ctx) {
+    //tftplog("Allocated ctx at %lx\n",ctx);
+    strncpy(&(ctx->filename),filename,63);
+    ctx->opcode = opcode;
+    ctx->buffer = buffer;
+    //tftplog("ctx buffer: %lx filename: %s\n",ctx->buffer,ctx->filename);
+    ctx->size = 0;
+    ctx->fd = fd;
+  } else {
+    buffer_busy = false;
+    if (fd>=0) SPIFFS_close(&fs,fd);
+  }
+
+
 }
 
 
@@ -114,7 +144,14 @@ char ip_s[16];
   
   switch(opcode) {
     case PICO_TFTP_RRQ:
-        pico_tftp_reject_request(addr,port,-1,"tftp get not supported");
+        ctx = open_file(filename,"r",opcode);
+        if (!ctx) {
+          pico_tftp_reject_request(addr,port,-1,"file could not be opened");
+        } else {
+          session = pico_tftp_session_setup(addr,PICO_PROTO_IPV4);
+          pico_tftp_start_tx(session,port,filename,cb_tftp_txrx,ctx);
+          tftplog("tftp get session %lx for %s\n", (uint32_t)session, filename);  
+        }
         break;
     case PICO_TFTP_WRQ:
         ctx = open_file(filename,"w",opcode);
