@@ -191,6 +191,42 @@ char *p;
    *pc=p;
 }
 
+// get next string argument from command line
+// p : pointer to current position in command line
+// **p1: will be filled with pointer to first char after current argument, used for next call
+// returns NULL when no argument found anymore, otherwise returns ptr to argument as zero terminated string
+// as side effect will replace the first space in the buffer after the returned argument with 0
+// returns the found argument (stripped from quotes) or NULL if there is no remaining arguemmt
+// p1 is only updatet when an argument is returned
+
+char* parsenext_arg(char *p, char **p1)
+{
+char delimiter;
+char *start;
+bool quoted;
+
+  if (p && *p) {
+    skipWhiteSpace(&p);
+    if (!*p) return NULL; // end of buffer reached 
+    // check of quotes
+    quoted = *p=='\'' || *p=='"';
+    if ( quoted ) {
+       delimiter = *p;
+       start = ++p;
+    }  else {
+       delimiter = ' ';
+       start = p;  
+    }
+    while (*p && *p!=delimiter ) p++; 
+    if (quoted && !*p) return NULL; // detect open quote...
+    *p1 = (*p)?p+1:p;
+    *p = '\0'; // Mark end of argument
+    return start;
+  }
+  return NULL;
+}
+
+
 int readBuffer(char *b,int sz)
 {
 char c;

@@ -14,7 +14,7 @@ SPIFFS_OBJ = $(CFILES:%.c=${BUILD}/%.o)
 OBJECTS = $(BUILD)/main.o  $(BUILD)/sys.o  $(BUILD)/xil_etherlite.o $(BUILD)/ethernet_driver.o \
 		  $(BUILD)/tftp.o  $(BUILD)/spi.o  \
 		  $(BUILD)/uart.o $(BUILD)/console.o $(BUILD)/monitor.o	$(BUILD)/snprintf.o \
-		  $(BUILD)/spiflash.o $(BUILD)/spiffs_hal.o  $(SPIFFS_OBJ)
+		  $(BUILD)/spiflash.o $(BUILD)/spiffs_hal.o  $(BUILD)/shell.o $(SPIFFS_OBJ)
 
 vpath %.c spiflash_driver/src $(CPATH)
 

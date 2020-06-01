@@ -35,6 +35,7 @@ uint64_t platform_timer_read_sys( void );
 
 
 int mon_main();
+void shell();
 
 //#define NO_FLASH
 #define NO_SYSCALL

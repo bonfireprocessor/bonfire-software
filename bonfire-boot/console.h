@@ -17,6 +17,7 @@ void read_num_str(char *b,int sz);
 bool parseNext(char *p,char **p1,uint32_t *pV);
 void skipWhiteSpace(char **pc);
 int readBuffer(char *b,int sz);
+char* parsenext_arg(char *p, char **p1);
 
 
 #endif

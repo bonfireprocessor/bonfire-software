@@ -24,19 +24,21 @@
 
 #include <stdint.h>
 
-#define s32_t int32_t
-#define u8_t uint8_t
-#define u32_t uint32_t
-#define s16_t int16_t
-#define u16_t uint16_t
+typedef  int32_t s32_t;
+typedef  uint8_t u8_t;
+typedef  uint32_t u32_t;
+typedef  int16_t s16_t;
+typedef  uint16_t u16_t;
 
 #include "console.h"
 
 // compile time switches
 
 // Set generic spiffs debug output call.
+
+
 #ifndef SPIFFS_DBG
-#define SPIFFS_DBG(_f, ...) printk(_f, ## __VA_ARGS__)
+#define SPIFFS_DBG(_f, ...) // printk(_f, ## __VA_ARGS__)
 #endif
 // Set spiffs debug output call for garbage collecting.
 #ifndef SPIFFS_GC_DBG
@@ -54,6 +56,7 @@
 #ifndef SPIFFS_API_DBG
 #define SPIFFS_API_DBG(_f, ...) //printf(_f, ## __VA_ARGS__)
 #endif
+
 
 
 
@@ -224,6 +227,7 @@
 // Instead of giving parameters in config struct, singleton build must
 // give parameters in defines below.
 
+//TH 
 
 #ifndef SPIFFS_CFG_PHYS_SZ
 #define SPIFFS_CFG_PHYS_SZ(ignore)        (1024*1024*8) // 8MB total size 
@@ -342,7 +346,7 @@
 #endif
 #if SPIFFS_TEST_VISUALISATION
 #ifndef spiffs_printf
-#define spiffs_printf(...)                printf(__VA_ARGS__)
+#define spiffs_printf(...)                printk(__VA_ARGS__)
 #endif
 // spiffs_printf argument for a free page
 #ifndef SPIFFS_TEST_VIS_FREE_STR

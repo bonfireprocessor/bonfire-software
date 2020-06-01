@@ -206,6 +206,9 @@ int i;
 #endif
 
 
+
+
+
 int mon_main()
 {
 
@@ -268,6 +271,9 @@ int err;
      } else continue;
 
      switch(xcmd) {
+       case 'S':
+          shell();
+          break;
        case 'D': // Dump command
 
          if (nArgs>=1)
@@ -332,6 +338,7 @@ int err;
          break;
 
 #if (!defined (NO_FLASH))
+     
        case 'F': // flash read
          // Usage ftarget_adr,flash_page(4K),len (pages)
          switch(nArgs) {
