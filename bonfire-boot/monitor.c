@@ -238,7 +238,7 @@ int err;
 #if (!defined (NO_FLASH))
    spiflash_t *spi;
    spi=flash_init();
-   spiffs_init(spi,4096);
+   spiffs_init(spi,4096,true);
    
 #endif    
 

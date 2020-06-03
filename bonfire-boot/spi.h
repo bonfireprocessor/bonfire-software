@@ -6,6 +6,7 @@
 
 bool spiflash_test();
 spiflash_t* flash_init();
+spiflash_t* get_spiflash();
 
 int flash_print_spiresult(int code);
 int flash_Overwrite(spiflash_t *spi, uint32_t addr, uint32_t len, const uint8_t *buf);

@@ -47,11 +47,14 @@ static int fsinfo_cmd(int argc,char **argv)
     printk("Total: %lu bytes, used %lu bytes\n",total,used);    
     return 0;
   }  else   {
-      printk(option_error);
-      return -1;
+      if (argv[1][0]=='-' && argv[1][1]=='x') {
+        SPIFFS_vis(&fs);
+        return 0;
+      } else {
+        printk(option_error);
+        return -1;
+      }  
   }
-
-  //SPIFFS_vis(&fs);
 }
 
 int rm_cmd(int argc,char **argv)
@@ -121,12 +124,49 @@ int mv_cmd(int argc,char **argv)
 }
 
 
+int fsck_cmd(int argc,char **argv)
+{
+    if (argc==1) {
+        int32_t result = SPIFFS_check(&fs);
+        if (result!=SPIFFS_OK) {
+            printk("fsck failed, error %ld\n",result);
+        }
+        return result;
+    } else {
+      printk(option_error);
+      return -1; 
+    }    
+}
+
+
+int format_cmd(int argc,char **argv)
+{
+    if (argc==1) {
+        printk("All data will be deleted!\n");
+        SPIFFS_unmount(&fs);
+        int32_t result=SPIFFS_format(&fs);
+        if (result!=SPIFFS_OK) {
+            printk("fsck format, error %ld\n",result);
+        } else {
+          // remount
+          result = spiffs_init(get_spiflash(),4096,false);
+        }
+        return result;
+    } else {
+      printk(option_error);
+      return -1; 
+    }    
+
+}
+
 t_shellcomand cmds[] = {
    {"ls", ls_cmd},
    {"fsinfo",fsinfo_cmd},
    {"rm",rm_cmd},
    {"cat",cat_cmd},
    {"mv",mv_cmd},
+   {"fsck",fsck_cmd},
+   {"format",format_cmd},
    {"exit", NULL},
    {NULL, NULL}
 };
@@ -152,6 +192,7 @@ bool found;
        argv[argc++] = arg; 
      } 
      if (argc>=1) {
+         found = false;
          for(int i=0;cmds[i].cmd_str!=NULL;i++) {
             t_shellcomand *c = &cmds[i]; 
             if (strcmp(c->cmd_str,argv[0])==0) {

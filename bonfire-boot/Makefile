@@ -1,4 +1,4 @@
-.PHONY: build_picotcp fuck all clean
+.PHONY: build_picotcp test all clean
 
 PICO_ROOT?=picotcp
 PICO_BUILD=$(PICO_ROOT)/build_rv32
@@ -13,8 +13,9 @@ SPIFFS_OBJ = $(CFILES:%.c=${BUILD}/%.o)
 
 OBJECTS = $(BUILD)/main.o  $(BUILD)/sys.o  $(BUILD)/xil_etherlite.o $(BUILD)/ethernet_driver.o \
 		  $(BUILD)/tftp.o  $(BUILD)/spi.o  \
+		  $(BUILD)/spiflash.o $(BUILD)/spiffs_hal.o $(BUILD)/shell.o \
 		  $(BUILD)/uart.o $(BUILD)/console.o $(BUILD)/monitor.o	$(BUILD)/snprintf.o \
-		  $(BUILD)/spiflash.o $(BUILD)/spiffs_hal.o  $(BUILD)/shell.o $(SPIFFS_OBJ)
+		  $(SPIFFS_OBJ)
 
 vpath %.c spiflash_driver/src $(CPATH)
 
@@ -37,4 +38,7 @@ build_picotcp:
 all: build/bonfire-boot.bin
 
 clean:
-	rm -f $(BUILD)/*	
+	rm -f $(BUILD)/*
+
+test:
+	echo $(OBJECTS)	

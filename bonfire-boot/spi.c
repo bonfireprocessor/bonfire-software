@@ -185,6 +185,10 @@ const spiflash_config_t my_spiflash_config = {
 
 static spiflash_t spif;
 
+spiflash_t* get_spiflash()
+{
+  return &spif;
+}
 
 
 spiflash_t* flash_init()
