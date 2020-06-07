@@ -57,7 +57,8 @@ static int fsinfo_cmd(int argc,char **argv)
   }
 }
 
-int rm_cmd(int argc,char **argv)
+
+static int rm_cmd(int argc,char **argv)
 {
 int32_t result;
 char *fmt;
@@ -78,7 +79,7 @@ char *fmt;
 }
 
 
-int cat_cmd(int argc,char **argv)
+static int cat_cmd(int argc,char **argv)
 {
 spiffs_file fd;
 char *fmt;
@@ -109,7 +110,7 @@ char buffer[257];
     }
 }
 
-int mv_cmd(int argc,char **argv)
+static int mv_cmd(int argc,char **argv)
 {
     if (argc==3) {
         int32_t result = SPIFFS_rename(&fs,argv[1],argv[2]);
@@ -124,7 +125,7 @@ int mv_cmd(int argc,char **argv)
 }
 
 
-int fsck_cmd(int argc,char **argv)
+static int fsck_cmd(int argc,char **argv)
 {
     if (argc==1) {
         int32_t result = SPIFFS_check(&fs);
@@ -139,7 +140,7 @@ int fsck_cmd(int argc,char **argv)
 }
 
 
-int format_cmd(int argc,char **argv)
+static int format_cmd(int argc,char **argv)
 {
     if (argc==1) {
         printk("All data will be deleted!\n");
@@ -159,7 +160,7 @@ int format_cmd(int argc,char **argv)
 
 }
 
-t_shellcomand cmds[] = {
+static t_shellcomand cmds[] = {
    {"ls", ls_cmd},
    {"fsinfo",fsinfo_cmd},
    {"rm",rm_cmd},

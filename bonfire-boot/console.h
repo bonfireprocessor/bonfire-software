@@ -19,5 +19,4 @@ void skipWhiteSpace(char **pc);
 int readBuffer(char *b,int sz);
 char* parsenext_arg(char *p, char **p1);
 
-
 #endif

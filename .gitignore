@@ -13,7 +13,7 @@
 *.sym
 *.bmm
 *.vhd
-/build/*
+/bonfire-boot/build/*
 /fusesoc.log
 *.geany
 *.vhd.old

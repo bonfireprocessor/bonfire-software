@@ -1,5 +1,9 @@
 .PHONY: build_picotcp test all clean
 
+BUILD ?=build
+
+all: $(BUILD)/bonfire-boot.bin
+
 PICO_ROOT?=picotcp
 PICO_BUILD=$(PICO_ROOT)/build_rv32
 
@@ -15,10 +19,13 @@ OBJECTS = $(BUILD)/main.o $(BUILD)/sys.o $(BUILD)/xil_etherlite.o $(BUILD)/ether
 		  $(BUILD)/tftp.o $(BUILD)/spi.o $(BUILD)/newlib_stubs.o  \
 		  $(BUILD)/spiflash.o $(BUILD)/spiffs_hal.o $(BUILD)/shell.o \
 		  $(BUILD)/uart.o $(BUILD)/console.o $(BUILD)/monitor.o	$(BUILD)/snprintf.o \
+		  $(BUILD)/riscv-gdb-stub.o $(BUILD)/gdb_interface.o \
 		  $(SPIFFS_OBJ)
 
-vpath %.c spiflash_driver/src $(CPATH)
 
+GDBSTUB = ../gdb-stub
+
+vpath %.c spiflash_driver/src $(CPATH) $(GDBSTUB)
 
 include  ../bonfire_defs.Makefile.include
 
@@ -34,11 +41,9 @@ build_picotcp:
 	cd $(PICO_ROOT) ; make -f riscvcross.mk PICO_OPTIONS="$(PICO_MIN_OPTIONS)" build
 
 
-
-all: build/bonfire-boot.bin
-
 clean:
 	rm -f $(BUILD)/*
 
 test:
 	echo $(OBJECTS)	
+	echo $(DEPS)

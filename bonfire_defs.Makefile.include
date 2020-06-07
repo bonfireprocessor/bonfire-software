@@ -2,6 +2,7 @@ PLATFORM?=ARTY_AXI
 ARCH?=rv32im
 ABI?=ilp32
 DEBUGFLAG?=NODEBUG
+BUILD ?=build
 
 UPLOAD_DIR?=~/upload
 
@@ -29,14 +30,17 @@ TARGET_CFLAGS +=  -march=$(ARCH) -mabi=$(ABI) -Wall -Og -g  -fomit-frame-pointer
 TARGET_LDFLAGS_SYSCALL += -march=$(ARCH) -mabi=$(ABI)   \
 	 -Wl,--gc-sections  -Wl,-T$(LINKDEF_DRAM) 
 
-BUILD ?=build
 
+DEPS = $(OBJECTS:%.o=%.d)
+include $(DEPS)
 
 $(BUILD)/%.o : %.S
 	$(TARGET_CC) $(TARGET_CFLAGS) -c $< -o $@
 
 $(BUILD)/%.o : %.c
 	$(TARGET_CC) $(TARGET_CFLAGS) -c $< -o $@
+	$(TARGET_CC) -MM $(TARGET_CFLAGS) $<  >$(basename $@).d
+	sed -i '1s;^;$(BUILD)/;' $(basename $@).d
 
 
 $(BUILD)/%.bin : $(BUILD)/%.elf
@@ -54,5 +58,7 @@ $(BUILD)/%.hex : $(BUILD)/%.elf
 	$(TARGET_PREFIX)-size  $<
 
 
-$(BUILD)/%.elf : $(OBJECTS) $(LINKDEF)
-	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS_SYSCALL)  $(OBJECTS) $(LIBS)  -lg -lm -lgloss	
+.SECONDARY :  $(OBJECTS)
+
+$(BUILD)/%.elf : $(OBJECTS)
+	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS_SYSCALL)  $^ $(LIBS)  # -lg -lm -lgloss	
