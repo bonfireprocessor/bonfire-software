@@ -3,8 +3,16 @@
 
 #include <stdint.h>
 
-//#define LOAD_BASE ((void*)0x010000)
-#define LOAD_BASE ((void*)0x08000000)
+
+
+extern uint8_t __loadbase;  // Symbol defined in Linker script
+extern uint8_t  __user_stack; // symbol defined by linker
+extern void _start();
+
+#define MY_BASE ((void*)&_start)
+#define LOAD_BASE ((void*)&__loadbase)
+#define LOAD_SIZE  ((intptr_t)MY_BASE -  (intptr_t)LOAD_BASE  )
+#define USER_STACK ((intptr_t)&__user_stack & 0x0fffffff0)
 
 typedef struct
 {
@@ -31,6 +39,7 @@ void delay_loop(uint32_t count);
 void test_dcache(int n);
 void print_cache_size();
 uint64_t platform_timer_read_sys( void );
+void flush_dache();
 
 
 
@@ -48,5 +57,6 @@ void shell();
     #define BAUDRATE 500000L
 #endif
 
+#define GDBSTUB 1
 
 #endif

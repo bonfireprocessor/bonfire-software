@@ -6,7 +6,7 @@
         {
             "label": "make bonfire-boot",
             "type": "shell",
-            "command": "make all",
+            "command": "make -j 6 LINKDEF_DRAM=bonfire-boot.ld",
             "options": {
                 "cwd": "${workspaceFolder}/bonfire-boot"
             },

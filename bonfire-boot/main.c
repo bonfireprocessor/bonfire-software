@@ -13,6 +13,7 @@
 #include "monitor.h"
 #include "console.h"
 #include "uart.h"
+#include "riscv-gdb-stub.h"
 
 #define NUM_PING 10
 
@@ -96,6 +97,8 @@ int main(void)
     struct pico_device* dev;
     uint32_t cid;
     unsigned long timeout;
+
+    gdb_initDebugger(1);
 
     setBaudRate(BAUDRATE);
     #ifndef SIM

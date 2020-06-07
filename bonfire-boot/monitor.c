@@ -30,12 +30,13 @@
 static bool gdb_status = false;
 #endif
 
-#define LOAD_SIZE  (DRAM_SIZE-(long)LOAD_BASE)
+
 #define HEADER_BASE ((void*)(LOAD_BASE-4096)) // Place Flash Header 4KB below LOAD_BASE
 
- // Important: Stack must be aligned modulo 8, otherwiese the varargs of doubles did not work
+ // Important: Stack must be aligned modulo 16, otherwiese the varargs of doubles did not work
 // Searched for this nearly a day, wondering why printf of doubles did not work...
-#define USER_STACK (DRAM_TOP & 0x0fffffff8)
+
+
 
 typedef struct {
   uint32_t magic;
@@ -78,7 +79,7 @@ void test_dram(uint32_t sz)
 void flush_dache()
 {
 #ifdef DCACHE_SIZE
-uint32_t *pmem = (void*)(DRAM_TOP-DCACHE_SIZE+1);
+uint32_t *pmem = (void*)(MY_BASE-DCACHE_SIZE);
 static volatile uint32_t sum=0; // To avoid optimizing away code below
 
   printk("Cache %d bytes Flush read from %lx\n",DCACHE_SIZE,pmem);
@@ -91,6 +92,17 @@ static volatile uint32_t sum=0; // To avoid optimizing away code below
 
 }
 
+/*
+start_user:
+mv sp,a1
+fence.i
+jalr a0
+*/
+
+void start_user(uint32_t pc,uint32_t sp)
+{
+  asm("mv sp,a1; fence.i; jalr a0");
+}
 
 void changeBaudRate()
 {
@@ -116,6 +128,7 @@ void printInfo()
 
 
   printk("\nBonfire-Boot 0.1 (GCC %s)\n",__VERSION__);
+  printk("Load Base: %lx\nUser Stack top: %lx\nLoad size %ld KBytes\n",LOAD_BASE, USER_STACK, LOAD_SIZE/1024);
   // printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUptime %d sec\n",
   //        read_csr(mimpid),read_csr(misa),
   //        getDivisor(),sys_time(NULL));
@@ -334,7 +347,7 @@ int err;
          else
            pfunc=LOAD_BASE;
          clear_csr(mstatus,MSTATUS_MIE);
-         //start_user((uint32_t)pfunc,USER_STACK );
+         start_user((uint32_t)pfunc,USER_STACK );
          break;
 
 #if (!defined (NO_FLASH))
@@ -373,10 +386,9 @@ int err;
        case 'R': // Load Boot Image from Flash and run
          if (readBootImage(spi)==SPIFLASH_OK) {
             // Temporarily disabled for testing
-            // flush_dache();
-            // clear_csr(mstatus,MSTATUS_MIE);
-
-            // start_user((uint32_t)LOAD_BASE,USER_STACK );
+             flush_dache();
+             clear_csr(mstatus,MSTATUS_MIE);
+             start_user((uint32_t)LOAD_BASE,USER_STACK );
          }
          break;
 

@@ -1,3 +1,5 @@
+#BASE_DIR?=$(HOME)/development/bonfire/bonfire-software
+BASE_DIR?=$(CURDIR)/..
 PLATFORM?=ARTY_AXI
 ARCH?=rv32im
 ABI?=ilp32
@@ -14,31 +16,37 @@ TARGET_SIZE := $(TARGET_PREFIX)-size
 TARGET_OBJCOPY := $(TARGET_PREFIX)-objcopy
 HEXDUMP ?= hexdump
 
-PLATFORMDIR=$(HOME)/development/bonfire/bonfire-software/platform
+PLATFORMDIR=$(BASE_DIR)/platform
 
-LINKDEF_DRAM=$(PLATFORMDIR)/$(PLATFORM)/bonfire_dram.ld
+LINKDEF_DRAM=ram_default.ld 
 LINKDEF?=$(PLATFORMDIR)/$(PLATFORM)/firmware.ld
 
+INCLUDES+= -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM)
 
 TARGET_CFLAGS +=  -march=$(ARCH) -mabi=$(ABI) -Wall -Og -g  -fomit-frame-pointer -fno-inline-functions-called-once  \
 	-ffreestanding -fno-builtin  -mstrict-align \
 	-Wall -Werror=implicit-function-declaration \
-	-DBONFIRE -D$(PLATFORM) -D$(DEBUGFLAG) -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM)  \
+	-DBONFIRE -D$(PLATFORM) -D$(DEBUGFLAG) $(INCLUDES)  \
    
 
 
 TARGET_LDFLAGS_SYSCALL += -march=$(ARCH) -mabi=$(ABI)   \
-	 -Wl,--gc-sections  -Wl,-T$(LINKDEF_DRAM) 
+	 -Wl,--gc-sections  -L$(BASE_DIR) -Wl,-T$(LINKDEF_DRAM) 
 
 
 DEPS = $(OBJECTS:%.o=%.d)
-include $(DEPS)
+-include $(DEPS)
+
+.SECONDARY: $(DEPS) $(OBJECTS)
 
 $(BUILD)/%.o : %.S
 	$(TARGET_CC) $(TARGET_CFLAGS) -c $< -o $@
 
 $(BUILD)/%.o : %.c
 	$(TARGET_CC) $(TARGET_CFLAGS) -c $< -o $@
+	
+
+$(BUILD)/%.d : %.c
 	$(TARGET_CC) -MM $(TARGET_CFLAGS) $<  >$(basename $@).d
 	sed -i '1s;^;$(BUILD)/;' $(basename $@).d
 
@@ -57,8 +65,6 @@ $(BUILD)/%.hex : $(BUILD)/%.elf
 	$(TARGET_PREFIX)-objdump -s $< >$(basename $@).dmp
 	$(TARGET_PREFIX)-size  $<
 
-
-.SECONDARY :  $(OBJECTS)
 
 $(BUILD)/%.elf : $(OBJECTS)
 	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS_SYSCALL)  $^ $(LIBS)  # -lg -lm -lgloss	

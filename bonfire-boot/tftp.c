@@ -53,6 +53,7 @@ switch (event) {
             }
           }  
           pico_tftp_send(session,buffer,result);
+          ctx->size += result;
           
       } else {
          //recevice
@@ -84,6 +85,8 @@ switch (event) {
            tftplog("file %s written to flash\n",ctx->filename);
          };
 
+      } else if (ctx->opcode==PICO_TFTP_RRQ && ctx->fd>=0) {
+        SPIFFS_close(&fs,ctx->fd);
       }
       buffer_busy = false;
       free(ctx);
@@ -120,17 +123,18 @@ spiffs_file fd = -1;
   ctx=malloc(sizeof(t_file_ctx)); 
   if (ctx) {
     //tftplog("Allocated ctx at %lx\n",ctx);
-    strncpy(&(ctx->filename),filename,63);
+    strncpy(ctx->filename,filename,63);
     ctx->opcode = opcode;
     ctx->buffer = buffer;
     //tftplog("ctx buffer: %lx filename: %s\n",ctx->buffer,ctx->filename);
     ctx->size = 0;
     ctx->fd = fd;
+    return ctx;
   } else {
     buffer_busy = false;
     if (fd>=0) SPIFFS_close(&fs,fd);
+    return NULL;
   }
-
 
 }
 

@@ -30,12 +30,18 @@ spiffs_DIR d;
 struct spiffs_dirent e;
 struct spiffs_dirent *pe = &e;
 
-  SPIFFS_opendir(&fs, "/", &d);
-  while ((pe = SPIFFS_readdir(&d, pe))) {
-    printk("%s  %d bytes \n", pe->name,  pe->size);
+  if (argc==1) {
+    SPIFFS_opendir(&fs, "/", &d);
+    while ((pe = SPIFFS_readdir(&d, pe))) {
+      printk("%s  %d bytes \n", pe->name,  pe->size);
+    }
+    SPIFFS_closedir(&d);
+    return 0;
+  } else {
+    printk(option_error);
+    return -1;
   }
-  SPIFFS_closedir(&d);
-  return 0;
+  
 }
 
 
@@ -160,6 +166,40 @@ static int format_cmd(int argc,char **argv)
 
 }
 
+static int run_cmd(int argc,char **argv)
+{
+spiffs_file fd;
+char *fmt;
+int len;
+
+
+    if (argc==2) {
+        fd=SPIFFS_open(&fs,argv[1],SPIFFS_O_RDONLY,0);
+        if (fd>=0) {
+           
+          len = SPIFFS_read(&fs,fd,LOAD_BASE,LOAD_SIZE);
+          if (len>0) {
+            printk("Loaded %ld bytes\n",len);
+            SPIFFS_close(&fs,fd);
+            flush_dache();
+            start_user((uint32_t)LOAD_BASE,(uint32_t)USER_STACK);
+          } else {
+            printk("Load failed or file empty\n");
+          }
+          
+        } else {
+            fmt="cannot open file %s\n";
+            printk(fmt,argv[1]);
+            return -1;
+        }
+        
+    } else  {
+      printk("usage rm <filename>\n");
+      return -1;
+    }
+}
+
+
 static t_shellcomand cmds[] = {
    {"ls", ls_cmd},
    {"fsinfo",fsinfo_cmd},
@@ -168,6 +208,7 @@ static t_shellcomand cmds[] = {
    {"mv",mv_cmd},
    {"fsck",fsck_cmd},
    {"format",format_cmd},
+   {"run",run_cmd},
    {"exit", NULL},
    {NULL, NULL}
 };

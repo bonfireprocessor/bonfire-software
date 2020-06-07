@@ -236,9 +236,11 @@ char *p;
    c=readchar();
    while (c!='\r') {
 
-      if (c==8 && p>b) {// backspace
-        p--;
-        writestr("\b \b");
+      if (c==8) {// backspace
+        if (p>b) {
+          p--;
+          writestr("\b \b");
+        }
       } else if ( p<(b+sz-1) ) {
           *p++=c;
           writechar(c); // echo
