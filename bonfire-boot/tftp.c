@@ -23,7 +23,8 @@ typedef  struct {
 
 #define BUFFER_ADDRESS LOAD_BASE // temporary hack !!!!!
 
-static bool buffer_busy = false;                                        
+static bool buffer_busy = false;
+static bool transfer_inprogress = false;                                   
 
 static int cb_tftp_txrx(struct pico_tftp_session *session, uint16_t event,
                         uint8_t *block, int32_t _len, void *arg)
@@ -71,6 +72,8 @@ switch (event) {
       break;
     case PICO_TFTP_EV_ERR_PEER:
     case PICO_TFTP_EV_ERR_LOCAL:
+      transfer_inprogress = false;
+      buffer_busy = false;
       tftplog("tftp error %s at session %lx\n",(char*)block, (uint32_t)session);
       break;
     case  PICO_TFTP_EV_SESSION_CLOSE:
@@ -84,6 +87,7 @@ switch (event) {
       }
       buffer_busy = false;
       free(ctx);
+      transfer_inprogress = false;
       break;
     default:
       tftplog("unsupported event: %d\n",event);  
@@ -141,6 +145,11 @@ char ip_s[16];
 
   pico_ipv4_to_string(ip_s,addr->ip4.addr);
   tftplog("new request from remote address %s port %d opcode %d\n", ip_s,short_be(port),opcode);
+
+  if (transfer_inprogress) {
+    pico_tftp_reject_request(addr,port,-1,"already transfer in progress");
+    return;
+  }
   
   switch(opcode) {
     case PICO_TFTP_RRQ:
@@ -148,6 +157,7 @@ char ip_s[16];
         if (!ctx) {
           pico_tftp_reject_request(addr,port,-1,"file could not be opened");
         } else {
+          transfer_inprogress = true;
           session = pico_tftp_session_setup(addr,PICO_PROTO_IPV4);
           pico_tftp_start_tx(session,port,filename,cb_tftp_txrx,ctx);
           tftplog("tftp get session %lx for %s\n", (uint32_t)session, filename);  
@@ -159,6 +169,7 @@ char ip_s[16];
           pico_tftp_reject_request(addr,port,-1,"out of memory");
           return;
         } else {
+          transfer_inprogress = true;
           session = pico_tftp_session_setup(addr,PICO_PROTO_IPV4);
           pico_tftp_start_rx(session,port,filename,cb_tftp_txrx,ctx);
           tftplog("tftp put session %lx for %s\n", (uint32_t)session, filename);  

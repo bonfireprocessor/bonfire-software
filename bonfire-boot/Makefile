@@ -11,8 +11,8 @@ include spiffs/files.mk
 # the above include will append to CPATH, CFILES FLAGS and INC
 SPIFFS_OBJ = $(CFILES:%.c=${BUILD}/%.o)
 
-OBJECTS = $(BUILD)/main.o  $(BUILD)/sys.o  $(BUILD)/xil_etherlite.o $(BUILD)/ethernet_driver.o \
-		  $(BUILD)/tftp.o  $(BUILD)/spi.o  \
+OBJECTS = $(BUILD)/main.o $(BUILD)/sys.o $(BUILD)/xil_etherlite.o $(BUILD)/ethernet_driver.o \
+		  $(BUILD)/tftp.o $(BUILD)/spi.o $(BUILD)/newlib_stubs.o  \
 		  $(BUILD)/spiflash.o $(BUILD)/spiffs_hal.o $(BUILD)/shell.o \
 		  $(BUILD)/uart.o $(BUILD)/console.o $(BUILD)/monitor.o	$(BUILD)/snprintf.o \
 		  $(SPIFFS_OBJ)

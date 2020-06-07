@@ -129,12 +129,6 @@ int main(void)
     //id = pico_icmp4_ping("192.168.26.2", NUM_PING, 1000, 10000, 64, cb_ping);
 
 
-    //app_tcpecho(5050);
-    /* keep running stack ticks to have picoTCP do its network magic. Note that
-     * you can do other stuff here as well, or sleep a little. This will impact
-     * your network performance, but everything should keep working (provided
-     * you don't go overboard with the delays). */
-   
     tftp_server_main();
     mon_main();
    

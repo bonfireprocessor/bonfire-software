@@ -232,9 +232,8 @@ SECTIONS
   _end = ALIGN(8);
   end = .;  __end = .;
 
-/*
-  _stacktop = ‭0x07fffff0‬;
-
+  _stacktop =  0x0ffffff0;
   _endofheap = _stacktop - 65536;
- */
+                
+ 
 }
