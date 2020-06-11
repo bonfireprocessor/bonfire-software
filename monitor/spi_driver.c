@@ -1,6 +1,7 @@
 #include "bonfire.h"
 #include "console.h"
 #include "spiflash.h"
+#include "monitor.h"
 
 #if (!defined (NO_FLASH))
 
@@ -248,17 +249,43 @@ uint32_t *p=(uint32_t*)buffer;
     return true; 
 }
 
-int flash_Overwrite(spiflash_t *spi, uint32_t addr, uint32_t len, const uint8_t *buf)
+static int flash_write_verify(spiflash_t *spi,uint32_t addr,const uint8_t *buf, uint32_t len, uint8_t* compare_buffer)
 {
 int res;
-int nBlocks,i;
+
+    // Check for sucessfull erase
+    SPIFLASH_read(spi,addr,len,compare_buffer);
+    if (!check_erase(compare_buffer,len/4)) {
+      printk("flash at %x not erased\n",addr);
+      return SPIFLASH_ERR_INTERNAL;
+      
+    }
+    printk("Writing mem %x to flash %x\n",buf,addr);
+    res=SPIFLASH_write(spi,addr,len,buf);
+    if (res!=SPIFLASH_OK) return res;
+    res=SPIFLASH_read(spi,addr,len,compare_buffer);
+    if (res!=SPIFLASH_OK) return res;
+    printk("Comparing...\n");
+    if (memcmp(buf,compare_buffer,len)!=0) {
+      return SPIFLASH_ERR_INTERNAL; // not better error code for the moment... 
+    }	 
+    return SPIFLASH_OK;
+}
+
+#define FLASH_WRITE_SIZE 256
+
+int flash_Overwrite(spiflash_t *spi, uint32_t addr,const uint8_t *buf, uint32_t len,t_flash_header* header)
+{
+int res;
 uint8_t *compare_buffer=(uint8_t*) (DRAM_TOP & 0xffff0000);
 
 
   printk("Compare Buffer at %x\n",compare_buffer);
 
+  if (header) len += sizeof(t_flash_header); // Wenn a header is passed at to len
+
    // Round up erase size by erase block size 
-  nBlocks = len / FLASH_ERASEBLOCK;
+  int nBlocks = len / FLASH_ERASEBLOCK;
    if (len % FLASH_ERASEBLOCK) nBlocks++;
    
   printk("Erasing %d %dKB Blocks at %x...\n",nBlocks,FLASH_ERASEBLOCK/1024,addr);
@@ -266,28 +293,28 @@ uint8_t *compare_buffer=(uint8_t*) (DRAM_TOP & 0xffff0000);
   flash_print_spiresult(res);
   if (res!=SPIFLASH_OK) return res;
 
-  // Recaclculate with Block size of 4KB, to write/compare in 4K units
-  nBlocks = len / 4096;
-  if (len % 4096) nBlocks++;
 
-  for(i=0;i<nBlocks && res==SPIFLASH_OK ;i++) {
-    // New: Check for sucessfull erase
-    SPIFLASH_read(spi,addr,4096,compare_buffer);
-    if (!check_erase(compare_buffer,4096/4)) {
-      printk("Block %d at flash %x not erased\n",i,addr);
-      return SPIFLASH_ERR_INTERNAL;
+  // Recaclculate write block size
+  nBlocks = len / FLASH_WRITE_SIZE;
+  if (len % FLASH_WRITE_SIZE) nBlocks++;
+
+  if (header) {
+    res=flash_write_verify(spi,addr,(uint8_t*)header, sizeof(t_flash_header),compare_buffer);
+    flash_print_spiresult(res);
+    if (res!=SPIFLASH_OK) return res;
+    len -= sizeof(t_flash_header);
+    addr+= sizeof(t_flash_header);
+  }
+
+  while(len>0 && res==SPIFLASH_OK) {   
+    int wlen = (len>FLASH_WRITE_SIZE)?FLASH_WRITE_SIZE:len;
+    res=flash_write_verify(spi,addr,buf,wlen, compare_buffer);
+    if (res!=SPIFLASH_OK) {
+      printk("SPI Write Error at addr %lx\n",addr);
+      break;
     }
-    printk("Writing mem %x to flash %x\n",buf,addr);
-    res=SPIFLASH_write(spi,addr,4096,buf);
-    if (res!=SPIFLASH_OK) continue;
-    res=SPIFLASH_read(spi,addr,4096,compare_buffer);
-    if (res!=SPIFLASH_OK) continue;
-    printk("Comparing...\n");
-    if (memcmp(buf,compare_buffer,4096)!=0) {
-      printk("SPI Write Error at Block %d\n",i);
-      res=SPIFLASH_ERR_INTERNAL; // not better error code for the moment... 
-    }	 
-    addr+=4096; buf+=4096;
+    len-=wlen;   
+    addr+=wlen; buf+=wlen;
   }
 
   return flash_print_spiresult(res);

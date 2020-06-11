@@ -25,22 +25,12 @@ static bool gdb_status = false;
 
 
 #define LOAD_SIZE  (DRAM_SIZE-(long)LOAD_BASE)
-#define HEADER_BASE ((void*)(LOAD_BASE-4096)) // Place Flash Header 4KB below LOAD_BASE
+
 
  // Important: Stack must be aligned modulo 8, otherwiese the varargs of doubles did not work
 // Searched for this nearly a day, wondering why printf of doubles did not work...
 #define USER_STACK (DRAM_TOP & 0x0fffffff8)
 
-typedef struct {
-  uint32_t magic;
-  uint32_t nPages;
-  uint32_t brkAddress;
-
-} t_flash_header;
-
-#define  FLASH_HEADER ((t_flash_header*)HEADER_BASE)
-
-#define C_MAGIC 0x55aaddbb
 
 #ifdef PLATFORM_BAUDRATE
   #define BAUDRATE PLATFORM_BAUDRATE
@@ -52,8 +42,7 @@ typedef struct {
 
 // XModem and spi Flash Variables
 
-int nPages=0;
-long recv_bytes=0;
+static long recv_bytes=0;
 
 extern uint32_t  brk_address;
 
@@ -153,7 +142,7 @@ void printInfo()
 {
 
 
-  printk("\nBonfire Boot Monitor 0.3g (20200425) (GCC %s)\n",__VERSION__);
+  printk("\nBonfire Boot Monitor 0.5a (20200608) (GCC %s)\n",__VERSION__);
   printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUptime %d sec\n",
          read_csr(mimpid),read_csr(misa),
          getDivisor(),sys_time(NULL));
@@ -175,30 +164,20 @@ void error(int n)
 void writeBootImage(spiflash_t *spi)
 {
 uint32_t nFlashBytes;
-uint32_t flashAddress;
-int err;
 
-   if (!nPages)
+   if (!flash_header.nPages)
      printk("First load Image !");
    else {
-     flashAddress=FLASH_IMAGEBASE;
-     nFlashBytes = nPages << 12;
-     if ((nFlashBytes+4096) >MAX_FLASH_IMAGESIZE) {
+    
+     nFlashBytes = flash_header.nPages << 12;
+     if ((nFlashBytes+sizeof(t_flash_header)) >MAX_FLASH_IMAGESIZE) {
        printk("Image size %d > %d, abort\n",nFlashBytes+4096,MAX_FLASH_IMAGESIZE);
        return;
      }
-     printk("Saving Image to Flash Address %x (%d bytes) \n",flashAddress,nFlashBytes);
-     memset(HEADER_BASE,0,4096);
-     FLASH_HEADER->magic=C_MAGIC;
-     FLASH_HEADER->nPages=nPages;
-     FLASH_HEADER->brkAddress=brk_address;
-
-     //err=flash_Overwrite(spi,FLASH_IMAGEBASE,4096,HEADER_BASE);
-     //if (err!=SPIFLASH_OK) return;
-     //flashAddress=FLASH_IMAGEBASE+4096;
-
+     printk("Saving Image %lx to Flash Address %x (%d bytes) \n",(uint8_t*)flash_header.loadAddress,
+            FLASH_IMAGEBASE,nFlashBytes+sizeof(t_flash_header));
      // TH 220420: Write Header + Image in one step
-     err=flash_Overwrite(spi,FLASH_IMAGEBASE,nFlashBytes+4096,HEADER_BASE);
+     flash_Overwrite(spi,FLASH_IMAGEBASE,(uint8_t*)flash_header.loadAddress,nFlashBytes,(t_flash_header*)HEADER_BASE);
 
    }
 
@@ -210,16 +189,16 @@ int readBootImage(spiflash_t *spi)
 int err;
 
   printk("Reading Header\n");
-  err=SPIFLASH_read(spi,FLASH_IMAGEBASE,4096,HEADER_BASE);
+  err=SPIFLASH_read(spi,FLASH_IMAGEBASE,sizeof(t_flash_header),HEADER_BASE);
   if (flash_print_spiresult(err)!=SPIFLASH_OK) return err;
   // Check Header
-  if (FLASH_HEADER->magic == C_MAGIC) {
-    uint32_t nFlashBytes = FLASH_HEADER->nPages << 12;
-    printk("Boot Image found, length %d Bytes, Break Address: %x\n",nFlashBytes,FLASH_HEADER->brkAddress);
-    err=SPIFLASH_read(spi,FLASH_IMAGEBASE+4096,nFlashBytes,LOAD_BASE);
+  if (flash_header.magic == C_MAGIC) {
+    uint32_t nFlashBytes =  flash_header.nPages << 12;
+    printk("Boot Image found, length %d Bytes, load address %lx, Break Address: %x\n",nFlashBytes,
+            flash_header.loadAddress, flash_header.brkAddress);
+    err=SPIFLASH_read(spi,FLASH_IMAGEBASE+sizeof(t_flash_header),nFlashBytes,(uint8_t*)flash_header.loadAddress);
     if (flash_print_spiresult(err)!=SPIFLASH_OK) return err;
-    nPages=FLASH_HEADER->nPages;
-    brk_address= FLASH_HEADER->brkAddress;
+    brk_address= flash_header.brkAddress;
     return SPIFLASH_OK;
 
   } else {
@@ -271,6 +250,7 @@ uint32_t flashAddress;
 int err;
 
 
+   flash_header.magic=0; 
    setBaudRate(BAUDRATE);
 #ifndef SIM
      wait(1000000);
@@ -345,15 +325,24 @@ int err;
 
          write_console("Wait for receive...\n");
          recv_bytes=xmodem_receive((char*)args[0],args[1]);
-         nPages= recv_bytes >> 12; // Number of 4096 Byte pages
-         if (recv_bytes % 4096) nPages+=1; // Round up..
-         brk_address= (args[0] + recv_bytes + 4096) & 0x0fffffffc;
-         flush_dache();
+         if (recv_bytes>0) {
+             flash_header.magic = C_MAGIC;
+             flash_header.nPages = recv_bytes >> 12; // Number of 4096 Byte pages
+             if (recv_bytes % 4096) flash_header.nPages+=1; // Round up..
+             flash_header.brkAddress = (args[0] + recv_bytes + 4096) & 0x0fffffffc;
+             flash_header.loadAddress = args[0];
+             flush_dache();
+         } else {
+           flash_header.magic = 0;
+         }
+         
          break;
 
        case 'E':
          if (recv_bytes>=0)
-           printk("\n%ld Bytes received\n%d(%x) Pages\nBreak Address %x\n",recv_bytes,nPages,nPages,brk_address);
+           printk("\n%ld Bytes received\nload address: %lx\n%d Pages\nBreak Address: %x\n",recv_bytes,
+                        flash_header.loadAddress, 
+                        flash_header.nPages,flash_header.brkAddress);
          else {
            printk("\nXmodem Error %ld occured\n",recv_bytes);
            xmmodem_errrorDump();
@@ -388,14 +377,13 @@ int err;
              args[0]=(uint32_t)LOAD_BASE;
              // fall through
            case 1:  // Only Load Base specified
-             args[1]=0x80; // Start at 512KB in Flash
+             args[1]=FLASH_IMAGEBASE >> 12; 
              // fall through
            case 2:
              args[2]=0x80; // Load 512KB
 
          }
 
-         nPages=args[2];
          flashAddress=args[1] << 12;
          nFlashbytes=args[2] << 12;
          if (flashAddress>=FLASHSIZE || (flashAddress+nFlashbytes) >=FLASHSIZE  || nFlashbytes==0) {
@@ -417,7 +405,7 @@ int err;
             flush_dache();
             clear_csr(mstatus,MSTATUS_MIE);
 
-            start_user((uint32_t)LOAD_BASE,USER_STACK );
+            start_user((uint32_t)flash_header.loadAddress,USER_STACK );
          }
          break;
 

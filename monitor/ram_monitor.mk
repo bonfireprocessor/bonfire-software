@@ -5,7 +5,7 @@ ARCH ?= rv32im
 ABI=ilp32
 PLATFORM ?= ARTY_AXI
 
-DEFINES = -DGDBSTUB=1 -DBONFIRE -DNO_SYSCALL -DDEBUG
+DEFINES = -DGDBSTUB=1 -DBONFIRE -DNO_SYSCALL #-DDEBUG
 
 UART?=uart
 TARGETDIR ?= ~/upload
@@ -32,7 +32,7 @@ GDBSTUB=../gdb-stub
 
 TARGET_CFLAGS += -march=$(ARCH) -mabi=$(ABI)   -Wall -Og -g -fomit-frame-pointer \
 	-ffreestanding -fno-builtin  -mstrict-align \
-	-Wall -Werror=implicit-function-declaration \
+	-Wall -Werror=implicit-function-declaration -Werror=int-conversion \
 	-D$(PLATFORM) $(DEFINES) \
 	-I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM) -I$(GDBSTUB)  -I./spiflash_driver/src -I../riscv  -I.
 
