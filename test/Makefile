@@ -86,7 +86,7 @@ memsim.elf: start.o memsim.o  mempattern.o
 sim_hello.o : sim_hello.c
 	$(TARGET_CC) $(TARGET_CFLAGS) -DSIM  -c sim_hello.c 
 
-sim_hello.elf: start.o uart.o sim_hello.o
+sim_hello.elf: start.o uart.o sim_hello.o snprintf.o console.o
 	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) start.o uart.o sim_hello.o snprintf.o console.o
 
 hw_hello.o : sim_hello.c

@@ -9,6 +9,8 @@ PICO_BUILD=$(PICO_ROOT)/build_rv32
 
 TARGET_NAME = bonfire-boot
 
+LINKDEF_DRAM=bonfire-boot.ld
+
 # SPIFFS
 spiffs?=spiffs
 include spiffs/files.mk
@@ -47,6 +49,7 @@ clean:
 	rm -f $(BUILD)/*
 
 test:
+	echo $(LINKDEF_DRAM)
 	echo $(OBJECTS)	
 	echo $(DEPS)
 	echo $(CURDIR)

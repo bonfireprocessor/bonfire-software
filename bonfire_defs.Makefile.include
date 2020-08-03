@@ -18,7 +18,7 @@ HEXDUMP ?= hexdump
 
 PLATFORMDIR=$(BASE_DIR)/platform
 
-LINKDEF_DRAM=ram_default.ld 
+LINKDEF_DRAM?=ram_default.ld 
 LINKDEF?=$(PLATFORMDIR)/$(PLATFORM)/firmware.ld
 
 INCLUDES+= -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM)

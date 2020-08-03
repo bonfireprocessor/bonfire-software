@@ -4,6 +4,9 @@
 #include "mem_rw.h"
 #include "console.h"
 
+#ifdef SIM
+#pragma message "Compiling for Simulator"
+#endif
 
 uint64_t get_timer_value()
 {
