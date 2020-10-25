@@ -36,7 +36,7 @@ TARGET_LDFLAGS += -march=$(ARCH) -mabi=$(ABI) -nostartfiles   \
 
 
 
-all: ledslow.hex counter.hex memtest.hex ledsim.hex mult.hex memsim.hex sim_hello.hex dram_codesim.hex hw_hello.hex
+all: ledslow.hex counter.hex memtest.hex ledsim.hex mult.hex memsim.hex sim_hello.hex dram_codesim.hex hw_hello.hex minimal.hex
 
 %.bit: %.elf
 	$(DATA2MEM) -bm $(PROJROOT)/platform/wildfire_papro/soc_bd.bmm  -bd $< -bt $(TOPLEVEL)  -o hb $(basename $@)
@@ -102,5 +102,6 @@ dram_codesim.elf : start.o dram_codesim.o
 jump0.elf : jump0.S
 	$(TARGET_LD) -o $@ -march=RV32IM -nostartfiles   -Wl,-T$(BOOTLINK)	$<
 
-
+minimal.elf: minimal.o
+	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) minimal.o
 
