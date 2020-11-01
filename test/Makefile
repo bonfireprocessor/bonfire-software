@@ -93,7 +93,7 @@ hw_hello.o : sim_hello.c
 	$(TARGET_CC) $(TARGET_CFLAGS) -o hw_hello.o -c sim_hello.c 
 
 
-hw_hello.elf: start.o hw_uart.o hw_hello.o
+hw_hello.elf: start.o hw_uart.o hw_hello.o snprintf.o console.o
 	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) start.o hw_uart.o hw_hello.o snprintf.o console.o	
 
 dram_codesim.elf : start.o dram_codesim.o
@@ -103,5 +103,5 @@ jump0.elf : jump0.S
 	$(TARGET_LD) -o $@ -march=RV32IM -nostartfiles   -Wl,-T$(BOOTLINK)	$<
 
 minimal.elf: minimal.o
-	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) minimal.o
+	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) -DSIM  minimal.o
 

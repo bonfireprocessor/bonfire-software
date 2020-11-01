@@ -4,6 +4,7 @@
 #include "console.h"
 #include <string.h>
 
+#if (!defined (NO_DCACHE_TEST))
 
 #define CACHE_WORDS 2048
 #define CACHE_BYTELANES 4  // Width of Cache Word in Bytes
@@ -76,3 +77,5 @@ int errors;
 
 
 }
+
+#endif

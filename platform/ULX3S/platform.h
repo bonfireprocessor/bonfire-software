@@ -1,6 +1,7 @@
-#ifndef BASIC_PLATFORM_H
-#define BASIC_PLATFORM_H
+#ifndef ULX3S_PLATFORM_H
+#define ULX3S_PLATFORM_H
 
+#pragma message "ULX3S platform"
 
 // New Defintions for new bonfire-soc-io core
 #define IO_BASE 0x04000000
@@ -23,7 +24,7 @@
 #define SRAM_TOP  (SRAM_BASE+SRAM_SIZE-1)
 
 //#define SYSCLK 96000000
-#define SYSCLK 25000000  // 25 MHz 
+#define SYSCLK 62500000  // 62.5 MHz 
 
 #define CLK_PERIOD (1e+9 / SYSCLK)  // in ns...
 
@@ -37,9 +38,9 @@
 #define FLASH_IMAGEBASE (1024*3072)  // Boot Image starts at 3MB in Flash
 
  
-#pragma message "BASIC platform"
 
-#define PLATFORM_BAUDRATE 38400
+
+#define PLATFORM_BAUDRATE 115200
 //#define PLATFORM_BAUDRATE 500000
 
 #define NO_SYSCALL

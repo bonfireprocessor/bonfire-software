@@ -1,5 +1,8 @@
-#include "wildfire.h"
+#include "bonfire.h"
 #include "uart.h"
+#include "bonfire_gpio.h"
+#include "mem_rw.h"
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -39,8 +42,8 @@ int x,y,result;
 uint32_t impid;
 
 
-  //setBaudRate(230400);
-  setBaudRate(115200);
+ 
+  setBaudRate(PLATFORM_BAUDRATE);
   write_console("\nWelcome to Bonfire\n");
   
   

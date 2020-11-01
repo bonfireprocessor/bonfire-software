@@ -26,15 +26,13 @@ uint64_t get_timer_value()
 void printInfo()
 {
 
-#ifdef BONFIRE_CORE
+  printk("UART Divisor: %d\n",getDivisor());
 
-  printk("UART Divisor: %d\n",
-         getDivisor());
-#else
-  printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\n",
-         read_csr(mimpid),read_csr(misa),
-         getDivisor());
-#endif 
+#ifndef BONFIRE_CORE
+  printk("MIMPID: %lx\n",read_csr(mimpid));
+  printk("MISA: %lx\n",read_csr(misa));
+#endif
+
 }
 
 
@@ -42,31 +40,30 @@ int main() {
 
 int i=0;
 
-  
+
   _write_word((void*)GPIO_BASE+GPIO_OUTPUT_EN,0xf);
   _write_word((void*)GPIO_BASE+GPIO_OUTPUT_VAL,0x9);
-  wait(3000000); 
+  //wait(3000000);
+
   setBaudRate(PLATFORM_BAUDRATE);
   printInfo();
-  
-  //printk("ImpID: %x\n",get_impid());
-  
+
   printk("SRAM base %x\n",SRAM_BASE);
 
-  while(1) { 
-    _write_word((void*)GPIO_BASE+GPIO_OUTPUT_VAL, 1 << (i++ % 4 ) );  
-    wait(1000000);
+  while(1) {
+     wait(1000000);
+    _write_word((void*)GPIO_BASE+GPIO_OUTPUT_VAL, 1 << (i++ % 4 ) );
     if ((i % 4) == 0) {
-  #ifndef BONFIRE_CORE    
+  #ifndef BONFIRE_CORE
       printk("Uptime: %d sec\n",(int)(get_timer_value()/SYSCLK));
   #else
       printk("run number %d\n",i);
-  #endif    
-  #ifdef SIM
-    if (i>4) writechar(0x1a); // Terminate Simulation  
   #endif
-    } 
-  }   
- 
- 
+  #ifdef SIM
+    if (i>4) writechar(0x1a); // Terminate Simulation
+  #endif
+    }
+  }
+
+
 }

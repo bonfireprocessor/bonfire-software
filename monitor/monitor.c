@@ -148,7 +148,8 @@ void printInfo()
          getDivisor(),sys_time(NULL));
 
   printk("DRAM Size %ld bytes\n",DRAM_SIZE);
-#ifdef DCACHE_SIZE
+
+#if (!defined (NO_DCACHE_TEST))
   print_cache_size();
 #endif
   printk("Framing errors: %ld\n",getFramingErrors());
@@ -214,13 +215,19 @@ int err;
 
 void gpio_test()
 {
-int i;
+int i=0;
+int t_old = -1;
 
-   while(wait_receive(1000000)== -1) { 
-    _write_word((void*)GPIO_BASE+GPIO_OUTPUT_VAL, 1 << (i++ % 8 ) );  
-    if ((i % 8) == 0) {
-      printk("Uptime: %d sec\n",sys_time(NULL));
-    } 
+
+   while(wait_receive(0)== -1) { 
+      int t = sys_time(NULL);
+      if (t!=t_old) {
+        _write_word((void*)GPIO_BASE+GPIO_OUTPUT_VAL, 1 << (i++ % 8 ) );  
+        if ((i % 8) == 0) {
+          printk("Uptime: %d sec\n",sys_time(NULL));
+        }
+        t_old = t; 
+      }      
   }   
 
 } 
@@ -252,9 +259,9 @@ int err;
 
    flash_header.magic=0; 
    setBaudRate(BAUDRATE);
-#ifndef SIM
+/* #ifndef SIM
      wait(1000000);
-#endif
+#endif */
 
 #if (defined(GPIO_TEST) )
 
@@ -414,7 +421,7 @@ int err;
          break;
 #endif 
 
-#ifdef DCACHE_SIZE
+#if (!defined (NO_DCACHE_TEST))
        case 'C':
          test_dcache(nArgs?args[0]:DCACHE_SIZE);
          break;
