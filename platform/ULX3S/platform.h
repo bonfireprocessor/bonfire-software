@@ -17,7 +17,7 @@
 #define MTIME_BASE 0x0FFFF0000
 
 #define DRAM_BASE 0x0
-#define DRAM_SIZE 0
+#define DRAM_SIZE (32*1024*1024)
 #define DRAM_TOP  (DRAM_BASE+DRAM_SIZE-1)
 #define SRAM_BASE 0xC0000000
 #define SRAM_SIZE 8192
@@ -35,18 +35,16 @@
 
 #define FLASHSIZE (8192*1024)
 #define MAX_FLASH_IMAGESIZE (2024*1024) // Max 2MB of flash used for boot image
-#define FLASH_IMAGEBASE (1024*3072)  // Boot Image starts at 3MB in Flash
+#define FLASH_IMAGEBASE (1024*6144)  // Boot Image starts at 6MB in Flash
 
  
-
-
 #define PLATFORM_BAUDRATE 115200
 //#define PLATFORM_BAUDRATE 500000
 
 #define NO_SYSCALL
-#define NO_FLASH
-#define NO_XMODEM
-#define NO_DRAMTEST
+//#define NO_FLASH
+//#define NO_XMODEM
+//#define NO_DRAMTEST
 #define NO_DCACHE_TEST
 #define GPIO_TEST
 

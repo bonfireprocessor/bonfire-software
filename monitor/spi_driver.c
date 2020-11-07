@@ -189,7 +189,7 @@ static spiflash_t spif;
 
 
 
-
+/*
 bool spiflash_test()
 {
 t_flashid id;
@@ -207,10 +207,14 @@ t_flashid id;
     return (id[0]==FLASH_MAN && id[1]==FLASH_DEV1 && id[2]==FLASH_DEV2);
 
 }
+*/
+
+
+
 
 spiflash_t* flash_init()
 {
-uint32_t  jedec_id;
+uint8_t jedec_id[4];
 
    spiflash_init();
    //spiflash_test();
@@ -222,8 +226,8 @@ uint32_t  jedec_id;
                 SPIFLASH_SYNCHRONOUS,
                 NULL);
 
-    SPIFLASH_read_jedec_id(&spif,&jedec_id);
-    printk("SPI Flash JEDEC ID: %x\n",jedec_id);
+    SPIFLASH_read_jedec_id(&spif,(uint32_t*)&jedec_id);
+    printk("Flash Man. ID: %x Dev. ID: %x\n",jedec_id[0],jedec_id[1]<<8 | jedec_id[2]);
     return &spif;
 }
 

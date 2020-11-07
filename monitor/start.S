@@ -108,6 +108,13 @@ addi sp,sp,-512 // save 512  Bytes for Trap handler stack
 la a1, __trap
 csrw mtvec,a1
 
+ # Clear the bss segment
+la      a0, _edata
+la      a2, _end
+sub     a2, a2, a0
+li      a1, 0
+call    memset
+
 jal main
 
 endless:
