@@ -24,8 +24,17 @@ SECTIONS
      *(.rodata)
      *(.eh_frame)
      *(.sdata)
+     *(.sdata.*)
+     *(.srodata.*)
+     *(.gnu.linkonce.s.*)
      *(.data)
+     *(.data.*)
+     *(.gnu.linkonce.d.*)
      _edata = .;
+  } > RAM
+
+  .bss ALIGN(4): {
+     _fbss = .;
      *(.sbss)
      *(.sbss.*)
      *(.gnu.linkonce.sb.*)
@@ -37,7 +46,7 @@ SECTIONS
       end = .; _end = .; __end = .;
 
  } > RAM
-  _stacktop = 0xC0007ff0;
+  _stacktop =  _rombase + 0x7ff0;
 
 }
 
