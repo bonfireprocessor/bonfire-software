@@ -25,6 +25,7 @@ SECTIONS
      *(.eh_frame)
      *(.sdata)
      *(.data)
+     _edata = .;
      *(.sbss)
      *(.sbss.*)
      *(.gnu.linkonce.sb.*)
