@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "RAM Monitor Debug",
+            "name": "Bonfire Boot",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/monitor/ARTY_AXIram_monitor.elf",
+            "program": "${workspaceFolder}/bonfire-boot/build/bonfire-boot.elf",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

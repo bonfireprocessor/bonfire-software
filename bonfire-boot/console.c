@@ -163,6 +163,44 @@ int digit;
 }
 
 
+// Extended version. Returns error code 
+// -1: invalid char
+// -2 number to long
+// 0 : no error
+// retruns converted value in result
+// accets nul or space as delimiter 
+
+int hstrtolx(char *p, char **pp, uint32_t *result)
+{
+uint32_t v=0;
+char c;
+int digit;
+int numdigits = 0;
+
+
+  while(*p!='\0' && *p!=' ') {
+    c=*p;
+   
+    if (c>='a' && c<='f') digit=c-'a'+10;
+    else if (c>='A' && c<='F') digit=c-'A'+10;
+    else if (c>='0' && c<='9') digit=c-'0';
+    else {
+      // Invalid char
+      *pp=p;   // let pp point to it
+      return -1;
+    }
+    v= (v << 4 ) | digit;
+    if (++numdigits > 8) {
+       return -2;
+    }
+    p++;
+  }
+  *pp=p;
+  *result = v;
+  return 0;
+}
+
+
 
 bool parseNext(char *p,char **p1,uint32_t *pV)
 {
