@@ -29,7 +29,7 @@ static bool buffer_busy = false;
 static bool transfer_inprogress = false;         
 
 
-static tftp_write_finish(t_file_ctx *ctx)
+static void tftp_write_finish(t_file_ctx *ctx)
 {
     switch (ctx->cmd) {
     case '\0':
@@ -44,7 +44,8 @@ static tftp_write_finish(t_file_ctx *ctx)
     case '!':
       tftplog("run image at %lx\n",ctx->buffer);
       clear_csr(mstatus,MSTATUS_MIE);
-      start_user(ctx->buffer,USER_STACK );
+      flush_dache();
+      start_user((uint32_t)(ctx->buffer),USER_STACK );
       break;  
     default:
       break;
@@ -142,7 +143,7 @@ char cmd ='\0';
           cmd = filename[0];
           char * dummy;
           uint32_t addr;
-          int res = hstrtolx(filename+1,dummy,&addr);
+          int res = hstrtolx(filename+1,&dummy,&addr);
           if (res<0) {
             tftplog("Invalid target address in %s\n",filename);
             return NULL;
