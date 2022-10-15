@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdint.h>
+#include "bonfire.h"
 #include "console.h"
 #include "monitor.h"
 #include "spiffs_hal.h"
@@ -19,12 +20,40 @@ typedef  struct {
   uint8_t *buffer;
   unsigned long size;
   spiffs_file fd;
+  char cmd;
 } t_file_ctx;
 
 #define BUFFER_ADDRESS LOAD_BASE // temporary hack !!!!!
 
 static bool buffer_busy = false;
-static bool transfer_inprogress = false;                                   
+static bool transfer_inprogress = false;         
+
+
+static void tftp_write_finish(t_file_ctx *ctx)
+{
+    switch (ctx->cmd) {
+    case '\0':
+      tftplog("writing to flash, please wait...\n");
+      if (spiffs_save(ctx->filename,ctx->buffer,ctx->size)==0) {
+           tftplog("file %s written to flash\n",ctx->filename);
+      };
+      break;
+    case '@':
+      tftplog("File written to memory @%lx\n",ctx->buffer);
+      break;
+    case '!':
+      tftplog("run image at %lx\n",ctx->buffer);
+      clear_csr(mstatus,MSTATUS_MIE);
+      flush_dache();
+      start_user((uint32_t)(ctx->buffer),USER_STACK );
+      break;  
+    default:
+      break;
+    }
+    
+}
+
+
 
 static int cb_tftp_txrx(struct pico_tftp_session *session, uint16_t event,
                         uint8_t *block, int32_t _len, void *arg)
@@ -80,11 +109,7 @@ switch (event) {
     case  PICO_TFTP_EV_SESSION_CLOSE:
       tftplog("tftp  session %lx closed transfered %ld bytes\n",(uint32_t)session,ctx->size);
       if (ctx->opcode==PICO_TFTP_WRQ && ctx->size>0) {
-         tftplog("writing...\n");
-         if (spiffs_save(ctx->filename,ctx->buffer,ctx->size)==0) {
-           tftplog("file %s written to flash\n",ctx->filename);
-         };
-
+         tftp_write_finish(ctx); 
       } else if (ctx->opcode==PICO_TFTP_RRQ && ctx->fd>=0) {
         SPIFFS_close(&fs,ctx->fd);
       }
@@ -104,6 +129,7 @@ static t_file_ctx *open_file(char * filename, char* mode, uint16_t opcode)
 t_file_ctx *ctx;
 uint8_t * buffer = (uint8_t*)BUFFER_ADDRESS; // malloc(MAX_FILESIZE);
 spiffs_file fd = -1;
+char cmd ='\0';
 
   switch(opcode) {
     case PICO_TFTP_RRQ:
@@ -113,6 +139,19 @@ spiffs_file fd = -1;
 
     case PICO_TFTP_WRQ:
         if (buffer_busy) return NULL;
+        if (filename[0]=='@' || filename[0]=='!') {
+          cmd = filename[0];
+          char * dummy;
+          uint32_t addr;
+          int res = hstrtolx(filename+1,&dummy,&addr);
+          if (res<0) {
+            tftplog("Invalid target address in %s\n",filename);
+            return NULL;
+          } else {
+            tftplog("Writing to memory address %lx\n",addr);
+            buffer = (uint8_t*)addr;
+          }
+        }
         buffer_busy = true;
         break;
 
@@ -124,6 +163,7 @@ spiffs_file fd = -1;
   if (ctx) {
     //tftplog("Allocated ctx at %lx\n",ctx);
     strncpy(ctx->filename,filename,63);
+    ctx->cmd = cmd;
     ctx->opcode = opcode;
     ctx->buffer = buffer;
     //tftplog("ctx buffer: %lx filename: %s\n",ctx->buffer,ctx->filename);
@@ -137,6 +177,7 @@ spiffs_file fd = -1;
   }
 
 }
+
 
 
 static void tftp_server_callback( union pico_address *addr, uint16_t port,

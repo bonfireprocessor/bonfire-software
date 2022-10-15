@@ -142,7 +142,7 @@ void printInfo()
 {
 
 
-  printk("\nBonfire Boot Monitor 0.5a (20200608) (GCC %s)\n",__VERSION__);
+  printk("\nBonfire Boot Monitor 0.5a (20220801) (GCC %s)\n",__VERSION__);
   printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUptime %d sec\n",
          read_csr(mimpid),read_csr(misa),
          getDivisor(),sys_time(NULL));

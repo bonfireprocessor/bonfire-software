@@ -19,4 +19,6 @@ void skipWhiteSpace(char **pc);
 int readBuffer(char *b,int sz);
 char* parsenext_arg(char *p, char **p1);
 
+int hstrtolx(char *p, char **pp, uint32_t *result);
+
 #endif

@@ -47,8 +47,6 @@
 #define DCACHE_LINES (DCACHE_WORDS/DCACHE_LINE_SIZE)
 
 
-//#define DCACHE_SIZE (8192*16)  // D Cache Size in Bytes
-
 
 #define SYSCLK  83333333
 
