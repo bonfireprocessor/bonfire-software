@@ -28,7 +28,7 @@
 
 #define CLK_PERIOD (1e+9 / SYSCLK)  // in ns...
 
-#define DCACHE_SIZE 0 // (2048*4)  // DCache Size in Bytes
+#define DCACHE_SIZE 16384 //  DCache Size in Bytes
 
 
 // Parameters for SPI Flash
@@ -37,6 +37,7 @@
 #define MAX_FLASH_IMAGESIZE (2024*1024) // Max 2MB of flash used for boot image
 #define FLASH_IMAGEBASE (1024*6144)  // Boot Image starts at 6MB in Flash
 
+#define NO_SUB_SECTOR_ERASE 1 // Flash chip does not support sub-sector erase (4K bytes), e.g. Spansion on Arty REV E.
  
 #define PLATFORM_BAUDRATE 115200
 //#define PLATFORM_BAUDRATE 500000

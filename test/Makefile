@@ -10,7 +10,7 @@ BOOTLINK=wildfboot.ld
 
 
 
-TARGET_PREFIX ?= riscv32-unknown-elf
+TARGET_PREFIX ?= riscv64-unknown-elf
 TARGET_CC := $(TARGET_PREFIX)-gcc
 TARGET_LD := $(TARGET_PREFIX)-gcc
 TARGET_SIZE := $(TARGET_PREFIX)-size

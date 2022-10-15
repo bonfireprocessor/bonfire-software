@@ -19,12 +19,22 @@ SECTIONS
 
    } > RAM
 
-  .data  ALIGN(4) : {
+ .data  ALIGN(4) : {
      *(.rodata.*)
      *(.rodata)
      *(.eh_frame)
      *(.sdata)
+     *(.sdata.*)
+     *(.srodata.*)
+     *(.gnu.linkonce.s.*)
      *(.data)
+     *(.data.*)
+     *(.gnu.linkonce.d.*)
+     _edata = .;
+  } > RAM
+
+  .bss ALIGN(4): {
+     _fbss = .;
      *(.sbss)
      *(.sbss.*)
      *(.gnu.linkonce.sb.*)
