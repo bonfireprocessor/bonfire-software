@@ -31,7 +31,7 @@ TARGET_CFLAGS +=  -march=$(ARCH) -mabi=$(ABI) -Wall -Og -g  -fomit-frame-pointer
 
 
 TARGET_LDFLAGS_SYSCALL += -march=$(ARCH) -mabi=$(ABI)   \
-	 -Wl,--gc-sections  -L$(BASE_DIR) -Wl,-T$(LINKDEF_DRAM) 
+	 -Wl,--gc-sections  -L$(BASE_DIR) -Wl,-T$(LINKDEF_DRAM) -specs=nano.specs -Wl,--wrap=printf
 
 
 DEPS = $(OBJECTS:%.o=%.d)
@@ -67,4 +67,4 @@ $(BUILD)/%.hex : $(BUILD)/%.elf
 
 
 $(BUILD)/%.elf : $(OBJECTS)
-	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS_SYSCALL)  $^ $(LIBS)  # -lg -lm -lgloss	
+	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS_SYSCALL)  $^ $(LIBS)  

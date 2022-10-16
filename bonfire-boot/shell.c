@@ -200,6 +200,8 @@ int len;
 }
 
 
+extern int lfs_test(int argc,char **argv);
+
 static t_shellcomand cmds[] = {
    {"ls", ls_cmd},
    {"fsinfo",fsinfo_cmd},
@@ -210,6 +212,7 @@ static t_shellcomand cmds[] = {
    {"format",format_cmd},
    {"run",run_cmd},
    {"exit", NULL},
+   {"lfs_mount",lfs_test},
    {NULL, NULL}
 };
 

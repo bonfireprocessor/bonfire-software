@@ -17,23 +17,28 @@ include spiffs/files.mk
 # the above include will append to CPATH, CFILES FLAGS and INC
 SPIFFS_OBJ = $(CFILES:%.c=${BUILD}/%.o)
 
-OBJECTS = $(BUILD)/main.o $(BUILD)/sys.o $(BUILD)/xil_etherlite.o $(BUILD)/ethernet_driver.o \
-		  $(BUILD)/tftp.o $(BUILD)/spi.o $(BUILD)/newlib_stubs.o  \
-		  $(BUILD)/spiflash.o $(BUILD)/spiffs_hal.o $(BUILD)/shell.o \
-		  $(BUILD)/uart.o $(BUILD)/console.o $(BUILD)/monitor.o	$(BUILD)/snprintf.o \
-		  $(BUILD)/riscv-gdb-stub.o $(BUILD)/gdb_interface.o $(BUILD)/gdb_traps.o $(BUILD)/trap.o \
-		  $(SPIFFS_OBJ)
+SRCFILES += main.c sys.c xil_etherlite.c ethernet_driver.c tftp.c spi.c newlib_stubs.c \
+		    spiflash.c shell.c uart.c console.c monitor.c snprintf.c \
+		    riscv-gdb-stub.c gdb_interface.c trap.c \
+			spiffs_hal.c
+
+#LittleFS
+SRCFILES += lfs.c lfs_util.c  littlefs_hal.c		  
+
+LOC_OBJ =  $(SRCFILES:%.c=${BUILD}/%.o)
+
+OBJECTS = $(LOC_OBJ) $(SPIFFS_OBJ) $(BUILD)/gdb_traps.o 
 
 
 GDBSTUB = ../gdb-stub
 
-vpath %.c spiflash_driver/src $(CPATH) $(GDBSTUB)
+vpath %.c spiflash_driver/src $(CPATH) $(GDBSTUB) littlefs
 vpath %.S $(GDBSTUB)
 
 include  ../bonfire_defs.Makefile.include
 
-INCLUDES += $(INC) -I. -I$(PICO_BUILD)/include -I$(PICO_BUILD)/include/arch -Ispiflash_driver/src -I$(GDBSTUB)
-TARGET_CFLAGS +=  $(FLAGS) -L$(CURDIR)  -DRISCV32
+INCLUDES += $(INC) -I. -I$(PICO_BUILD)/include -I$(PICO_BUILD)/include/arch -Ispiflash_driver/src -Ilittlefs -I$(GDBSTUB)
+TARGET_CFLAGS +=  $(FLAGS) -L$(CURDIR)  -DRISCV32 -DLFS_YES_TRACE
 LIBS += -L$(PICO_BUILD)/lib -lpicotcp
 
 PICO_MIN_OPTIONS?= IPFILTER=0 DHCP_SERVER=0 NAT=0 MCAST=0  \
@@ -53,3 +58,4 @@ test:
 	echo $(OBJECTS)	
 	echo $(DEPS)
 	echo $(CURDIR)
+	echo $(LOC_OBJ)

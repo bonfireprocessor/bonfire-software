@@ -34,6 +34,16 @@ void printk(const char* s, ...)
   va_end(vl);
 }
 
+void __wrap_printf(const char* s, ...)
+{
+  va_list vl;
+  va_start(vl, s);
+
+  vprintk(s, vl);
+
+  va_end(vl);
+}
+
 void dump_tf(trapframe_t* tf)
 {
   static const char*  regnames[] = {
