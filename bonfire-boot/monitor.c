@@ -220,7 +220,7 @@ int i;
 
 
 
-
+extern int lfs_init(spiflash_t* _spi);
 
 int mon_main()
 {
@@ -252,6 +252,7 @@ int err;
    spiflash_t *spi;
    spi=flash_init();
    spiffs_init(spi,4096,true);
+   lfs_init(spi);
    
 #endif    
 

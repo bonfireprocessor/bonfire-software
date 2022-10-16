@@ -7,7 +7,6 @@
 #include "lfs.h"
 #include <stdbool.h>
 #include <ctype.h> 
-#include "spi.h"
 #include "spiflash.h"
 
 
@@ -16,7 +15,7 @@
 
 // variables used by the filesystem
 lfs_t lfs;
-lfs_file_t file;
+
 
 #define FIRST_BLOCK  (1024*6144) // Start at 6MB - for testing
 #define BLOCK_SIZE 65536
@@ -123,10 +122,12 @@ const struct lfs_config *get_lfs_hal()
 
 
 
-int lfs_test(int argc,char **argv)
+int lfs_init(spiflash_t* _spi)
 {
+//lfs_file_t file;
+   
       //mount the filesystem
-      spi = get_spiflash();
+      spi = _spi;
 
       int err = lfs_mount(&lfs, &cfg);
 
@@ -143,21 +144,21 @@ int lfs_test(int argc,char **argv)
       }
 
    
-      uint32_t boot_count = 0;
-      lfs_file_open(&lfs, &file, "boot_count", LFS_O_RDWR | LFS_O_CREAT);
-      lfs_file_read(&lfs, &file, &boot_count, sizeof(boot_count));
+    //   uint32_t boot_count = 0;
+    //   lfs_file_open(&lfs, &file, "boot_count", LFS_O_RDWR | LFS_O_CREAT);
+    //   lfs_file_read(&lfs, &file, &boot_count, sizeof(boot_count));
 
-      // update boot count
-      boot_count += 1;
-      lfs_file_rewind(&lfs, &file);
-      lfs_file_write(&lfs, &file, &boot_count, sizeof(boot_count));
+    //   // update boot count
+    //   boot_count += 1;
+    //   lfs_file_rewind(&lfs, &file);
+    //   lfs_file_write(&lfs, &file, &boot_count, sizeof(boot_count));
 
-      // remember the storage is not updated until the file is closed successfully
-      lfs_file_close(&lfs, &file);
-      printk("boot_count: %d\n", boot_count);
-    //}
-    // release any resources we were using
-    lfs_unmount(&lfs);
+    //   // remember the storage is not updated until the file is closed successfully
+    //   lfs_file_close(&lfs, &file);
+    //   printk("boot_count: %d\n", boot_count);
+    // //}
+    // // release any resources we were using
+    // lfs_unmount(&lfs);
 
     return 1;
 

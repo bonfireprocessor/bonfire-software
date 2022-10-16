@@ -11,8 +11,11 @@
 #include "uart.h"
 #include "spi.h"
 #include "spiffs_hal.h"
+#include "lfs.h"
 
 #define MAX_ARGS 16
+
+extern lfs_t lfs;
 
 typedef int (*t_shellfunc)(int argc,char **argv);
 
@@ -26,17 +29,28 @@ static char* option_error = "Invalid options/arguments\n";
 
 static int ls_cmd(int argc,char **argv)
 {
-spiffs_DIR d;
-struct spiffs_dirent e;
-struct spiffs_dirent *pe = &e;
+lfs_dir_t d;
+struct lfs_info info;
 
-  if (argc==1) {
-    SPIFFS_opendir(&fs, "/", &d);
-    while ((pe = SPIFFS_readdir(&d, pe))) {
-      printk("%s  %d bytes \n", pe->name,  pe->size);
+
+  if (argc==1 || argc ==2) {
+    const char *path = argc==1?"/":argv[1];
+    if (lfs_dir_open(&lfs, &d, path )==LFS_ERR_OK) {
+
+      while (lfs_dir_read(&lfs,&d, &info)) {
+        printk("%s ", info.name);
+        if (info.type == LFS_TYPE_DIR)
+          printk("<DIR>\n");
+        else  
+          printk("%d bytes \n", info.size);
+      }
+      
+      lfs_dir_close(&lfs,&d);
+      return 0;
+    } else {
+      printk("Directory %s cannot be opened\n",path);
+      return -1;
     }
-    SPIFFS_closedir(&d);
-    return 0;
   } else {
     printk(option_error);
     return -1;
@@ -197,10 +211,11 @@ int len;
       printk("usage rm <filename>\n");
       return -1;
     }
+    return 0;
 }
 
 
-extern int lfs_test(int argc,char **argv);
+//extern int lfs_test(int argc,char **argv);
 
 static t_shellcomand cmds[] = {
    {"ls", ls_cmd},
@@ -212,7 +227,7 @@ static t_shellcomand cmds[] = {
    {"format",format_cmd},
    {"run",run_cmd},
    {"exit", NULL},
-   {"lfs_mount",lfs_test},
+   //{"lfs_mount",lfs_test},
    {NULL, NULL}
 };
 
