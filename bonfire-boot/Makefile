@@ -38,7 +38,8 @@ vpath %.S $(GDBSTUB)
 include  ../bonfire_defs.Makefile.include
 
 INCLUDES += $(INC) -I. -I$(PICO_BUILD)/include -I$(PICO_BUILD)/include/arch -Ispiflash_driver/src -Ilittlefs -I$(GDBSTUB)
-TARGET_CFLAGS +=  $(FLAGS) -L$(CURDIR)  -DRISCV32
+TARGET_CFLAGS +=  $(FLAGS) -L$(CURDIR)  -DRISCV32 
+#-DLFS_NO_ASSERT
 # -DLFS_YES_TRACE
 
 LIBS += -L$(PICO_BUILD)/lib -lpicotcp
