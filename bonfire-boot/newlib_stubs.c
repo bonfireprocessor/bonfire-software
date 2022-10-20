@@ -79,7 +79,7 @@ return len;
 
 __attribute__((weak)) int _write(int file, char *ptr, int len)
 {
-	  for(int i=0;i<len;i++) writechar(*ptr++);
+	for(int i=0;i<len;i++) writechar(*ptr++);
     return len;
 }
 
@@ -151,3 +151,4 @@ int _execve(char *name, char **argv, char **env)
 	errno = ENOMEM;
 	return -1;
 }
+

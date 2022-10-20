@@ -42,6 +42,8 @@ TARGET_CFLAGS +=  $(FLAGS) -L$(CURDIR)  -DRISCV32
 #-DLFS_NO_ASSERT
 # -DLFS_YES_TRACE
 
+TARGET_LDFLAGS_SYSCALL +=  -Wl,--wrap=printf -Wl,--wrap=_exit  -Wl,--wrap=__assert_func
+
 LIBS += -L$(PICO_BUILD)/lib -lpicotcp
 
 PICO_MIN_OPTIONS?= IPFILTER=0 DHCP_SERVER=0 NAT=0 MCAST=0  \

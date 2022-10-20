@@ -9,6 +9,8 @@
 extern lfs_t lfs;
 int lfs_init(spiflash_t* _spi);
 
+int do_format(bool unmount);
+
 
 
 #endif

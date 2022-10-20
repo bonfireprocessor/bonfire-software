@@ -18,7 +18,7 @@
 
 void vprintk(const char* s, va_list vl)
 {
-char out[256];
+char out[1024];
 
   vsnprintf(out, sizeof(out), s, vl);
   write_console(out);
@@ -303,3 +303,15 @@ char *p;
    write_console("\n");
    return p-b; // len
 }
+
+
+void __wrap___assert_func(const char *file,
+	int line,
+	const char *func,
+	const char *failedexpr)
+{
+
+	printk("assertion \"%s\" failed:\n file \"%s\", line %d%s%s\n",
+	   failedexpr, file, line,
+	   func ? ", function: " : "", func ? func : "");
+}	

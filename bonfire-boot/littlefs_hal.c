@@ -120,45 +120,32 @@ const struct lfs_config *get_lfs_hal()
    return &cfg;
 }
 
-
+int do_format(bool unmount)
+{
+    if (unmount) lfs_unmount(&lfs);
+    printk("Formating littleFS\n");
+    int err=lfs_format(&lfs, &cfg);
+    if (err) {
+      printk("LittleFS Format failure %ld\n",err);
+      return err;
+    }
+   
+    return  lfs_mount(&lfs, &cfg);  
+}
 
 int lfs_init(spiflash_t* _spi)
 {
-//lfs_file_t file;
-   
-      //mount the filesystem
+  
       spi = _spi;
 
+      //mount the filesystem
       int err = lfs_mount(&lfs, &cfg);
 
       // reformat if we can't mount the filesystem
       // this should only happen on the first boot
       if (err) {
-          printk("Formating littleFS\n");
-          err=lfs_format(&lfs, &cfg);
-          if (err) {
-            printk("LittleFS Format failure %ld\n",err);
-            return -1;
-          }
-          lfs_mount(&lfs, &cfg);
+           do_format(false);
       }
-
-   
-    //   uint32_t boot_count = 0;
-    //   lfs_file_open(&lfs, &file, "boot_count", LFS_O_RDWR | LFS_O_CREAT);
-    //   lfs_file_read(&lfs, &file, &boot_count, sizeof(boot_count));
-
-    //   // update boot count
-    //   boot_count += 1;
-    //   lfs_file_rewind(&lfs, &file);
-    //   lfs_file_write(&lfs, &file, &boot_count, sizeof(boot_count));
-
-    //   // remember the storage is not updated until the file is closed successfully
-    //   lfs_file_close(&lfs, &file);
-    //   printk("boot_count: %d\n", boot_count);
-    // //}
-    // // release any resources we were using
-    // lfs_unmount(&lfs);
 
     return 1;
 

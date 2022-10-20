@@ -12,6 +12,7 @@
 #include "spi.h"
 #include "spiffs_hal.h"
 #include "lfs.h"
+#include "littlefs_hal.h"
 
 #define MAX_ARGS 16
 
@@ -84,8 +85,8 @@ int32_t result;
 char *fmt;
 
     if (argc==2) {
-        result=SPIFFS_remove(&fs,argv[1]);
-        if (result==SPIFFS_OK) {
+        result = lfs_remove(&lfs,argv[1]);
+        if (result==LFS_ERR_OK) {
             fmt="removed file %s\n";
         } else {
             fmt="remove %s failed (%ld)\n";
@@ -101,22 +102,21 @@ char *fmt;
 
 static int cat_cmd(int argc,char **argv)
 {
-spiffs_file fd;
+lfs_file_t fd;
 char *fmt;
 int len;
 char buffer[257];
 
     if (argc==2) {
-        fd=SPIFFS_open(&fs,argv[1],SPIFFS_O_RDONLY,0);
-        if (fd>=0) {
-            while (!SPIFFS_eof(&fs,fd)) {
-                len = SPIFFS_read(&fs,fd,buffer,sizeof(buffer-1));
-                if (len) {
-                    buffer[len]='\0';
-                    write_console(buffer);
-                }    
+        memset((void*)&fd,0,sizeof(lfs_file_t));
+        int err=lfs_file_open(&lfs,&fd,argv[1],LFS_O_RDONLY);
+        if (err==LFS_ERR_OK) {
+           
+            while ( (len=lfs_file_read(&lfs,&fd,buffer,sizeof(buffer)-1)) > 0 ) {
+                buffer[len]='\0';
+                write_console(buffer); 
             }
-            SPIFFS_close(&fs,fd);
+            lfs_file_close(&lfs,&fd);
             return 0;
         } else {
             fmt="cannot open file %s\n";
@@ -133,8 +133,8 @@ char buffer[257];
 static int mv_cmd(int argc,char **argv)
 {
     if (argc==3) {
-        int32_t result = SPIFFS_rename(&fs,argv[1],argv[2]);
-        if (result!=SPIFFS_OK) {
+        int32_t result = lfs_rename(&lfs,argv[1],argv[2]);
+        if (result!=LFS_ERR_OK) {
             printk("mv failed, error %ld\n",result);
         }
         return result;
@@ -164,15 +164,8 @@ static int format_cmd(int argc,char **argv)
 {
     if (argc==1) {
         printk("All data will be deleted!\n");
-        SPIFFS_unmount(&fs);
-        int32_t result=SPIFFS_format(&fs);
-        if (result!=SPIFFS_OK) {
-            printk("fsck format, error %ld\n",result);
-        } else {
-          // remount
-          result = spiffs_init(get_spiflash(),4096,false);
-        }
-        return result;
+        return do_format(true);
+        
     } else {
       printk(option_error);
       return -1; 
