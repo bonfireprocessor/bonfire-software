@@ -28,6 +28,8 @@ typedef struct {
 
 static char* option_error = "Invalid options/arguments\n";
 
+
+
 static int ls_cmd(int argc,char **argv)
 {
 lfs_dir_t d;
@@ -108,7 +110,7 @@ int len;
 char buffer[257];
 
     if (argc==2) {
-        memset((void*)&fd,0,sizeof(lfs_file_t));
+        fd_init(&fd);
         int err=lfs_file_open(&lfs,&fd,argv[1],LFS_O_RDONLY);
         if (err==LFS_ERR_OK) {
            
@@ -175,23 +177,28 @@ static int format_cmd(int argc,char **argv)
 
 static int run_cmd(int argc,char **argv)
 {
-spiffs_file fd;
+lfs_file_t fd;
 char *fmt;
 int len;
 
 
-    if (argc==2) {
-        fd=SPIFFS_open(&fs,argv[1],SPIFFS_O_RDONLY,0);
-        if (fd>=0) {
+    if (argc==2) {     
+        fd_init(&fd);
+        int err=lfs_file_open(&lfs,&fd,argv[1],LFS_O_RDONLY);
+        if (err==LFS_ERR_OK) {
            
-          len = SPIFFS_read(&fs,fd,LOAD_BASE,LOAD_SIZE);
+       
+          len = lfs_file_read(&lfs,&fd,LOAD_BASE,LOAD_SIZE);
           if (len>0) {
             printk("Loaded %ld bytes\n",len);
-            SPIFFS_close(&fs,fd);
+            lfs_file_close(&lfs,&fd);
+            lfs_unmount(&lfs);
+           
             flush_dache();
             start_user((uint32_t)LOAD_BASE,(uint32_t)USER_STACK);
           } else {
             printk("Load failed or file empty\n");
+            lfs_file_close(&lfs,&fd);
           }
           
         } else {
