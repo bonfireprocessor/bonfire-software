@@ -127,7 +127,7 @@ void printInfo()
 {
 
 
-  printk("\nBonfire-Boot 0.2 (2022) (GCC %s)\n",__VERSION__);
+  printk("\nBonfire-Boot 1.0 littleFS (2022) (GCC %s)\n",__VERSION__);
   printk("Load Base: %lx\nUser Stack top: %lx\nLoad size %ld KBytes\n",LOAD_BASE, USER_STACK, LOAD_SIZE/1024);
   // printk("MIMPID: %lx\nMISA: %lx\nUART Divisor: %d\nUptime %d sec\n",
   //        read_csr(mimpid),read_csr(misa),

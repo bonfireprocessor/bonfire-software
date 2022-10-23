@@ -8,9 +8,15 @@
 #include <string.h>
 
 
-#define FIRST_BLOCK  (1024*6144) // Start at 6MB - for testing
+#define FIRST_BLOCK FLASH_FSBASE // (1024*6144) // Start at 6MB - for testing
+
+#if ( defined(NO_SUB_SECTOR_ERASE) && NO_SUB_SECTOR_ERASE==1)
 #define BLOCK_SIZE 65536
-#define FS_SIZE (2048*1024) // 2MB -- for tesing
+#else
+#define BLOCK_SIZE 4096
+#endif
+
+#define FS_SIZE FLASH_FSSIZE // (2048*1024) // 2MB -- for tesing
 #define NUM_BLOCKS (FS_SIZE/BLOCK_SIZE)
 #define PAGE_SIZE 16
 

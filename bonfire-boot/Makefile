@@ -11,23 +11,17 @@ TARGET_NAME = bonfire-boot
 
 LINKDEF_DRAM=bonfire-boot.ld
 
-# SPIFFS
-spiffs?=spiffs
-include spiffs/files.mk
-# the above include will append to CPATH, CFILES FLAGS and INC
-SPIFFS_OBJ = $(CFILES:%.c=${BUILD}/%.o)
-
 SRCFILES += main.c sys.c xil_etherlite.c ethernet_driver.c tftp.c spi.c newlib_stubs.c \
 		    spiflash.c shell.c uart.c console.c monitor.c snprintf.c \
-		    riscv-gdb-stub.c gdb_interface.c trap.c \
-			spiffs_hal.c
+		    riscv-gdb-stub.c gdb_interface.c trap.c 
+		
 
 #LittleFS
 SRCFILES += lfs.c lfs_util.c  littlefs_hal.c		  
 
 LOC_OBJ =  $(SRCFILES:%.c=${BUILD}/%.o)
 
-OBJECTS = $(LOC_OBJ) $(SPIFFS_OBJ) $(BUILD)/gdb_traps.o 
+OBJECTS = $(LOC_OBJ)  $(BUILD)/gdb_traps.o 
 
 
 GDBSTUB = ../gdb-stub

@@ -61,6 +61,9 @@
 #define MAX_FLASH_IMAGESIZE (2024*1024) // Max 2MB of flash used for boot image
 #define FLASH_IMAGEBASE (1024*3072)  // Boot Image starts at 3MB in Flash
 
+#define FLASH_FSBASE (8192*1024) // File System Starts at 8MB in FLash
+#define FLASH_FSSIZE (FLASHSIZE-FLASH_FSBASE)
+
 #define NO_SUB_SECTOR_ERASE 1 // Flash chip does not support sub-sector erase (4K bytes), e.g. Spansion on Arty REV E.
 
 #endif

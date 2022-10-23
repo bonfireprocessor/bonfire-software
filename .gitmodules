@@ -7,9 +7,6 @@
 [submodule "bonfire-boot/picotcp"]
 	path = bonfire-boot/picotcp
 	url = git@github.com:ThomasHornschuh/picotcp.git
-[submodule "bonfire-boot/spiffs"]
-	path = bonfire-boot/spiffs
-	url = https://github.com/pellepl/spiffs.git
 [submodule "bonfire-boot/spiflash_driver"]
 	path = bonfire-boot/spiflash_driver
 	url = https://github.com/pellepl/spiflash_driver.git
