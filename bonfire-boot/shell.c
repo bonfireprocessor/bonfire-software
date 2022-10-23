@@ -4,13 +4,13 @@
 #include <ctype.h>
 #include <stdbool.h>
 
+
 #include "bonfire.h"
 #include "monitor.h"
 
 #include "console.h"
 #include "uart.h"
 #include "spi.h"
-#include "spiffs_hal.h"
 #include "lfs.h"
 #include "littlefs_hal.h"
 
@@ -62,22 +62,70 @@ struct lfs_info info;
 }
 
 
+/* Helper functions for fsinfo*/
+
+struct traverse_context {
+   lfs_block_t blocklist[NUM_BLOCKS];
+   int item_count; 
+};
+
+// lfs_fs_traverse callback
+static int traverse_cb(void* data,lfs_block_t block)
+{
+struct traverse_context* ctx = (struct traverse_context*)data;
+
+    // Check if block is already in list
+    for(int i=0;i<ctx->item_count;i++) {
+      if (ctx->blocklist[i]==block) return 0; // Found...
+    }
+     ctx->blocklist[ctx->item_count++]=block;
+     return 0;
+}
+
+// Compare function for Quicksort
+static int cmpfunc (const void * a, const void * b) {
+   return ( *(lfs_block_t*)a - *(lfs_block_t*)b );
+}
+
+
 static int fsinfo_cmd(int argc,char **argv)
 {
-  if (argc==1) {
-    uint32_t total, used;
-    SPIFFS_info(&fs,&total,&used);
-    printk("Total: %lu bytes, used %lu bytes\n",total,used);    
+
+
+
+  if (argc==1) {   
+    lfs_size_t used_blocks = lfs_fs_size(&lfs);
+    if (used_blocks<=0) {
+      printk("Internal error %ld\n",used_blocks);
+      return -1;
+    }
+    int32_t used_bytes = used_blocks * BLOCK_SIZE;
+    int32_t free_blocks = NUM_BLOCKS-used_blocks;
+    printk("Total: %lu bytes, used %lu bytes, %ld blocks (%ld bytes) available\n",
+            FS_SIZE,used_bytes,free_blocks,free_blocks * BLOCK_SIZE);    
     return 0;
   }  else   {
       if (argv[1][0]=='-' && argv[1][1]=='x') {
-        SPIFFS_vis(&fs);
+        struct traverse_context blocklist;
+        blocklist.item_count=0;
+        lfs_fs_traverse(&lfs,traverse_cb,(void*)&blocklist);
+        qsort(&blocklist.blocklist,blocklist.item_count,sizeof(lfs_block_t),cmpfunc);
+        printk("LittleFS Info\n");
+        printk("Filesystem size %ld blocks, %ld Bytes\n",NUM_BLOCKS,FS_SIZE);
+        printk("Base address in FLASH: %lx\n",FIRST_BLOCK);
+        printk("Number of allocated Blocks: %ld\n",blocklist.item_count);
+        printk("List of allocated blocks:\n");
+        for(int i=0;i<blocklist.item_count;i++) {
+          printk("%ld ",blocklist.blocklist[i]);
+        }
+        printk("\n");
         return 0;
       } else {
         printk(option_error);
         return -1;
       }  
   }
+  return -1;
 }
 
 
@@ -105,7 +153,7 @@ char *fmt;
 static int cat_cmd(int argc,char **argv)
 {
 lfs_file_t fd;
-char *fmt;
+const char *fmt;
 int len;
 char buffer[257];
 
@@ -135,11 +183,11 @@ char buffer[257];
 static int mv_cmd(int argc,char **argv)
 {
     if (argc==3) {
-        int32_t result = lfs_rename(&lfs,argv[1],argv[2]);
-        if (result!=LFS_ERR_OK) {
-            printk("mv failed, error %ld\n",result);
+        int32_t err = lfs_rename(&lfs,argv[1],argv[2]);
+        if (err!=LFS_ERR_OK) {
+            printk("mv failed, error %ld\n",err);
         }
-        return result;
+        return err;
     } else {
       printk("usage mv <source> <dest>\n");
       return -1; 
@@ -147,18 +195,26 @@ static int mv_cmd(int argc,char **argv)
 }
 
 
-static int fsck_cmd(int argc,char **argv)
+static int mkdir_cmd(int argc,char **argv)
 {
-    if (argc==1) {
-        int32_t result = SPIFFS_check(&fs);
-        if (result!=SPIFFS_OK) {
-            printk("fsck failed, error %ld\n",result);
+const char *fmt;
+
+    if (argc==2) {
+        int32_t err=lfs_mkdir(&lfs,argv[1]);
+        if (err==LFS_ERR_OK) {
+           fmt = "Directory %s created\n";
+        } else {
+            fmt="cannot create directory %s\n";
+           
         }
-        return result;
-    } else {
-      printk(option_error);
-      return -1; 
-    }    
+        printk(fmt,argv[1]);
+        return err;
+        
+    } else  {
+      printk("usage mkdir <name>\n");
+      return -1;
+    }
+  
 }
 
 
@@ -223,7 +279,7 @@ static t_shellcomand cmds[] = {
    {"rm",rm_cmd},
    {"cat",cat_cmd},
    {"mv",mv_cmd},
-   {"fsck",fsck_cmd},
+   {"mkdir",mkdir_cmd},
    {"format",format_cmd},
    {"run",run_cmd},
    {"exit", NULL},

@@ -7,6 +7,13 @@
 #include "lfs.h"
 #include <string.h>
 
+
+#define FIRST_BLOCK  (1024*6144) // Start at 6MB - for testing
+#define BLOCK_SIZE 65536
+#define FS_SIZE (2048*1024) // 2MB -- for tesing
+#define NUM_BLOCKS (FS_SIZE/BLOCK_SIZE)
+#define PAGE_SIZE 16
+
 extern lfs_t lfs;
 int lfs_init(spiflash_t* _spi);
 

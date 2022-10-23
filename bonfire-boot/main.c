@@ -14,6 +14,7 @@
 #include "console.h"
 #include "uart.h"
 #include "riscv-gdb-stub.h"
+#include "mem_rw.h"
 
 #define NUM_PING 10
 
@@ -97,6 +98,8 @@ int main(void)
     struct pico_device* dev;
     uint32_t cid;
     unsigned long timeout;
+
+    _write_word((void*)0,0x00100073); // Place a hardcoded break at address 0
 
     gdb_initDebugger(1);
 

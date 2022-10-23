@@ -10,7 +10,7 @@
 #include "uart.h"
 #include "console.h"
 #include "spi.h"
-#include "spiffs_hal.h"
+
 
 #include "pico_stack.h"
 
@@ -151,7 +151,7 @@ void writeBootImage(spiflash_t *spi)
 {
 uint32_t nFlashBytes;
 uint32_t flashAddress;
-int err;
+
 
    if (!nPages)
      printk("First load Image !");
@@ -169,7 +169,7 @@ int err;
      FLASH_HEADER->brkAddress=brk_address;
   
      // TH 220420: Write Header + Image in one step
-     err=flash_Overwrite(spi,FLASH_IMAGEBASE,nFlashBytes+4096,HEADER_BASE);
+     flash_Overwrite(spi,FLASH_IMAGEBASE,nFlashBytes+4096,HEADER_BASE);
 
    }
 
@@ -251,7 +251,6 @@ int err;
 #if (!defined (NO_FLASH))
    spiflash_t *spi;
    spi=flash_init();
-   spiffs_init(spi,4096,true);
    lfs_init(spi);
    
 #endif    

@@ -4,24 +4,14 @@
 
 #if (!defined (NO_FLASH))
 
-#include "lfs.h"
-#include <stdbool.h>
+#include "littlefs_hal.h"
 #include <ctype.h> 
-#include "spiflash.h"
-
-
-
-
 
 // variables used by the filesystem
 lfs_t lfs;
 
 
-#define FIRST_BLOCK  (1024*6144) // Start at 6MB - for testing
-#define BLOCK_SIZE 65536
-#define FS_SIZE (1024*1024) // 1MB -- for tesing
-#define NUM_BLOCKS (FS_SIZE/BLOCK_SIZE)
-#define PAGE_SIZE 16
+
 
 
 static spiflash_t* spi;
@@ -35,26 +25,6 @@ static int lfshal_flash_read(const struct lfs_config *c, lfs_block_t block,
 }
 
 
-// static HAL_StatusTypeDef _flash_program_verify(rt_uint32_t dest,void* src)
-// {
-//     //rt_kprintf("Program quadword at %lx\n",dest);
-//     HAL_StatusTypeDef res = HAL_FLASH_Program(FLASH_TYPEPROGRAM_QUADWORD,dest,(uint32_t)src);
-//     //rt_kprintf("HAL_Status: %lx\n",res);
-//     if (res!=HAL_OK) return res;
-
-//     rt_uint32_t * d = (rt_uint32_t*)dest;
-//     rt_int32_t * s = (rt_uint32_t*)src;
-
-//     HAL_ICACHE_Invalidate();
-//     for(int i=0;i<4;i++) {
-//         if (*d != *s) {
-//             rt_kprintf("Flash program error at %lx (%lx != %lx)\n",d,*d,*s);
-//             return HAL_ERROR;
-//         }
-//     }
-//     return HAL_OK;
-// }
-
 
 static int lfshal_flash_prog(const struct lfs_config *c, lfs_block_t block,
             lfs_off_t off, const void *buffer, lfs_size_t size)
@@ -63,7 +33,7 @@ static int lfshal_flash_prog(const struct lfs_config *c, lfs_block_t block,
    
     uint32_t addr = block * BLOCK_SIZE + FIRST_BLOCK + off;
 
-    printk("lfshal_flash_prog to block %d, address %lx, size %d\n ",block,addr,size);
+    printk("lfshal_flash_prog:  block %d, address %lx, size %d\n",block,addr,size);
     return SPIFLASH_write(spi,addr,size,(uint8_t*)buffer);    
 }
 
@@ -71,7 +41,7 @@ static int lfshal_flash_prog(const struct lfs_config *c, lfs_block_t block,
 static int lfshal_flash_erase(const struct lfs_config *c, lfs_block_t block)
 {
 
-  printk("lfshal_flash_erase with block %d\n",block);
+  printk("lfshal_flash_erase: block %d\n",block);
   return SPIFLASH_erase(spi,block * BLOCK_SIZE + FIRST_BLOCK,BLOCK_SIZE); 
    
 }
