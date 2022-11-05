@@ -147,6 +147,10 @@ void printInfo()
          read_csr(mimpid),read_csr(misa),
          getDivisor(),sys_time(NULL));
 
+  #ifdef BONFIRE_SYSIO
+    printk("SoC Build ID: %lx\n",_read_word((void*)BONFIRE_SYSIO+4));
+  #endif          
+
   printk("DRAM Size %ld bytes\n",DRAM_SIZE);
 
 #if (!defined (NO_DCACHE_TEST))
@@ -234,6 +238,16 @@ int t_old = -1;
 #endif
 
 
+static void bootFromImage(spiflash_t *spi)
+{
+   if (readBootImage(spi)==SPIFLASH_OK) {
+      flush_dache();
+      clear_csr(mstatus,MSTATUS_MIE);
+
+      start_user((uint32_t)flash_header.loadAddress,USER_STACK ); // will not return...
+  }
+}
+
 int main()
 {
 
@@ -275,6 +289,14 @@ int err;
    spi=flash_init();
 #endif    
 
+#ifdef ARTY_SWITCHES_BUTTONS
+
+  // Boot automatically into the Flash Image when SW0 on an Arty board is set
+  if (_read_word((void*)ARTY_SWITCHES_BUTTONS) & 0x1)   bootFromImage(spi);
+
+#endif
+
+
    #ifdef SIM
    writechar(0x1a); // Stop simulation here 
    #endif
@@ -284,7 +306,7 @@ int err;
      if (readBuffer(cmd,sizeof(cmd))) {
         p=cmd;
         skipWhiteSpace(&p);
-        if (*p!='\0' && isalpha(*p)) {
+        if (*p!='\0' && isalpha((int)*p)) {
           xcmd=toupper(*p++);
           skipWhiteSpace(&p);
         }  else {
@@ -408,12 +430,7 @@ int err;
          break;
 
        case 'R': // Load Boot Image from Flash and run
-         if (readBootImage(spi)==SPIFLASH_OK) {
-            flush_dache();
-            clear_csr(mstatus,MSTATUS_MIE);
-
-            start_user((uint32_t)flash_header.loadAddress,USER_STACK );
-         }
+         bootFromImage(spi);
          break;
 
        case 'W': // flash write
