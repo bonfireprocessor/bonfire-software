@@ -28,6 +28,7 @@
 #define CLK_PERIOD (1e+9 / SYSCLK)  // in ns...
 
 #define DCACHE_SIZE 0 // (2048*4)  // DCache Size in Bytes
+#define NO_DCACHE_TEST
 
 
 // Parameters for SPI Flash

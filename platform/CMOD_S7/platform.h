@@ -22,7 +22,7 @@
 #define SRAM_SIZE 16384
 #define SRAM_TOP  (SRAM_BASE+SRAM_SIZE-1)
 
-#define SYSCLK 12000000  // 12 MHz 
+#define SYSCLK 96000000  // 96 MHz 
 
 #define CLK_PERIOD (1e+9 / SYSCLK)  // in ns...
 
@@ -39,12 +39,13 @@
 
 //#define SIM // undef when not compiling for simulator 
 
-#define PLATFORM_BAUDRATE 38400
+#define PLATFORM_BAUDRATE 500000
 
 #define NO_SYSCALL
-#define NO_FLASH
+//#define NO_FLASH
 #define NO_XMODEM
 #define NO_DRAMTEST
 #define NO_DCACHE_TEST
+#define GPIO_TEST
 
 #endif
