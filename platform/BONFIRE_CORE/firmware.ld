@@ -36,7 +36,7 @@ SECTIONS
       end = .; _end = .; __end = .;
 
  } > RAM
-  _stacktop =  _rombase + 0x1ff0; 
+  _stacktop =  (_rombase + 8192) & 0xfffffff0; 
 
 }
 

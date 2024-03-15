@@ -1,5 +1,5 @@
-#ifndef BASIC12_PLATFORM_H
-#define BASIC12_PLATFORM_H
+#ifndef BONFIRE_CORE_PLATFORM_H
+#define BONFIRE_CORE_PLATFORM_H
 
 
 // New Defintions for new bonfire-soc-io core
@@ -8,8 +8,10 @@
 
 #define UART0_BASE IO_BASE
 #define SPIFLASH_BASE (IO_BASE+SOC_IO_OFFSET)
-#define GPIO_BASE (IO_BASE+3*SOC_IO_OFFSET)
+//#define GPIO_BASE (IO_BASE+3*SOC_IO_OFFSET)
 #define UART1_BASE (IO_BASE+2*SOC_IO_OFFSET)
+
+#define GPIO_BASE 0x80000000
 
 #define UART_BASE UART0_BASE // Backwards compatiblity
 
@@ -19,7 +21,7 @@
 #define DRAM_SIZE 0
 #define DRAM_TOP  (DRAM_BASE+DRAM_SIZE-1)
 #define SRAM_BASE 0xC0000000
-#define SRAM_SIZE 8192
+#define SRAM_SIZE (2048*4)
 #define SRAM_TOP  (SRAM_BASE+SRAM_SIZE-1)
 
 #define SYSCLK 25000000  // 25 MHz 

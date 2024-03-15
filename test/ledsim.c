@@ -1,17 +1,17 @@
-
-#include "wildfire.h"
+#include <stdint.h>
+#include "platform.h"
+#include "mem_rw.h"
 
 // GPIO Test Program intented for use with the simulator
 
-volatile uint8_t *gpioadr=(uint8_t *)GPIO_BASE;
 
 int main(int argc,char ** argv) {
 
-volatile int counter =1;
+ int counter =0;
 
     while(1) {
 	
-        *gpioadr= counter++ & 0x0f;
+         _write_word(GPIO_BASE,( counter++ >> 2 )  & 0x0f);       
    }
 
 };
