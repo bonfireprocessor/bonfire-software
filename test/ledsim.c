@@ -7,11 +7,11 @@
 
 int main(int argc,char ** argv) {
 
- int counter =0;
+   volatile  counter =0;
 
     while(1) {
 	
-         _write_word(GPIO_BASE,( counter++ >> 2 )  & 0x0f);       
+         _write_word((void*)GPIO_BASE,( counter++ >> 2 )  & 0x0f);       
    }
 
 };
