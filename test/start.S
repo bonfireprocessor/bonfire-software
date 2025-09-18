@@ -9,10 +9,10 @@
 
 _start:
 
-#ifndef BONFIRE_CORE
+//#ifndef BONFIRE_CORE
 la s1, trap
 csrw mtvec, s1
-#endif
+//#endif
 
 la sp,_stacktop // set SP to end of RAM
 jal main
@@ -23,10 +23,12 @@ csrr a0,mimpid
 ret
 
 trap:
+#ifndef BONFIRE_CORE
 li a1,GPIO_BASE
 li a2, 0xff
 sw a2, GPIO_OUTPUT_EN(a1)
 csrr t1,mepc
 sw t1, GPIO_OUTPUT_VAL(a1)
+#endif 
 j trap
 
