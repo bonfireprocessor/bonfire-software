@@ -7,10 +7,10 @@
 
 int main(int argc,char ** argv) {
 
- int counter =0;
+   volatile int counter =0;
 
     while(1) {
-        _write_word(GPIO_BASE, (counter++ >> 20) & 0x0f);        
+        _write_word((void*)GPIO_BASE, (counter++ >> 20) & 0x0f);        
    }
 
 };

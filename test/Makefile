@@ -4,6 +4,7 @@
 ARCH ?= rv32im
 ABI=ilp32
 PLATFORM ?= PAPRO
+LINKSPECS ?=nosys.specs  # For picolic overwrite with  pioolibc.specs in command line
 
 BOOTLINK=wildfboot.ld
 
@@ -31,7 +32,7 @@ TARGET_CFLAGS +=  -march=$(ARCH) -mabi=$(ABI) -Wall -Os -g  -fomit-frame-pointer
 	-D$(PLATFORM) -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM) -I../riscv
 
 TARGET_LDFLAGS += -march=$(ARCH) -mabi=$(ABI) -nostartfiles   \
-	-Wl,-m,elf32lriscv --specs=nosys.specs -Wl,-T$(LINKDEF) \
+	-Wl,-m,elf32lriscv --specs=$(LINKSPECS) -Wl,-T$(LINKDEF) \
 	-Wl,--gc-sections
 
 
@@ -105,3 +106,7 @@ jump0.elf : jump0.S
 minimal.elf: minimal.o
 	$(TARGET_LD) -o $@ $(TARGET_LDFLAGS) -DSIM  minimal.o
 
+
+clean:
+	rm -f *.o *.elf *.bin *.hex *.lst *.dmp *.bit
+	

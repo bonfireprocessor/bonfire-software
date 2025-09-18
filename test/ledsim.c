@@ -7,7 +7,7 @@
 
 int main(int argc,char ** argv) {
 
-   volatile  counter =0;
+   volatile int counter =0;
 
     while(1) {
 	
