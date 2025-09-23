@@ -44,6 +44,7 @@
 #define NO_FLASH
 #define NO_XMODEM
 #define NO_DRAMTEST
+#define NO_DCACHE_TEST
 
 #define GPIO_TEST
 
