@@ -32,6 +32,7 @@ TARGET_CFLAGS +=  -march=$(ARCH) -mabi=$(ABI) -Wall -Os -g  -fomit-frame-pointer
 	-D$(PLATFORM) -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM) -I../riscv
 
 TARGET_LDFLAGS += -march=$(ARCH) -mabi=$(ABI) -nostartfiles   \
+    -L$(PLATFORMDIR) \
 	-Wl,-m,elf32lriscv --specs=$(LINKSPECS) -Wl,-T$(LINKDEF) \
 	-Wl,--gc-sections
 

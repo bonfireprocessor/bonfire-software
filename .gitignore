@@ -22,3 +22,5 @@
 /monitor/.settings/language.settings.xml
 /.vscode/settings.json
 /.vscode/launch.json
+*.map
+build

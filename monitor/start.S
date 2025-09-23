@@ -49,7 +49,7 @@
   csrr t0,mscratch // orginal SP from trap
   csrr   s0,mstatus
   csrr   t1,mepc
-  csrr   t2,mbadaddr
+  csrr   t2,mtval  // was mbaddr in old RISC-V spec.
 
   csrr   t3,mcause
   STORE  t0,2*REGBYTES(x2)
