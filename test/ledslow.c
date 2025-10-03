@@ -2,6 +2,7 @@
 #include "platform.h"
 #include "mem_rw.h"
 // Test program intented for work on real hardware
+//TH 03.10.2025: Support for 8  up to LEDs
 
 //volatile uint8_t *gpioadr=(uint8_t *)GPIO_BASE;
 
@@ -10,7 +11,7 @@ int main(int argc,char ** argv) {
    volatile int counter =0;
 
     while(1) {
-        _write_word((void*)GPIO_BASE, (counter++ >> 20) & 0x0f);        
+        _write_word((void*)GPIO_BASE, (counter++ >> 20) & 0xff);        
    }
 
 };
