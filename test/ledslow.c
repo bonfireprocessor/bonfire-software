@@ -11,7 +11,7 @@ int main(int argc,char ** argv) {
    volatile int counter =0;
 
     while(1) {
-        _write_word((void*)GPIO_BASE, (counter++ >> 20) & 0xff);        
+        _write_word((void*)LED_BASE, (counter++ >> 20) & 0xff);        
    }
 
 };

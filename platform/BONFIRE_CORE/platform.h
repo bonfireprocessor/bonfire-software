@@ -3,17 +3,17 @@
 
 
 // New Defintions for new bonfire-soc-io core
-#define IO_BASE 0x04000000
+#define IO_BASE (0x40000000)
 #define SOC_IO_OFFSET 0x10000 // Offset from one I/O Device to the next (64K range)
 
-#define UART0_BASE IO_BASE
+#define UART0_BASE (IO_BASE)
 #define SPIFLASH_BASE (IO_BASE+SOC_IO_OFFSET)
-//#define GPIO_BASE (IO_BASE+3*SOC_IO_OFFSET)
+#define GPIO_BASE (IO_BASE+3*SOC_IO_OFFSET)
 #define UART1_BASE (IO_BASE+2*SOC_IO_OFFSET)
 
-#define GPIO_BASE 0x80000000
+#define LED_BASE 0x80000000
 
-#define UART_BASE UART0_BASE // Backwards compatiblity
+#define UART_BASE (UART0_BASE) // Backwards compatiblity
 
 #define MTIME_BASE 0x0FFFF0000
 
@@ -39,6 +39,8 @@
 #define FLASH_IMAGEBASE (1024*3072)  // Boot Image starts at 3MB in Flash
 
 #pragma message "BONFIRE_CORE platform"
+#define BONFIRE_CORE 1
+
 
 //#define SIM // undef when not compiling for simulator 
 
