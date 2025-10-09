@@ -259,6 +259,7 @@ int err;
 
    flash_header.magic=0; 
    setBaudRate(BAUDRATE);
+  
 /* #ifndef SIM
      wait(1000000);
 #endif */

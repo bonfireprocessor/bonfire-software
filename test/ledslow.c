@@ -8,10 +8,14 @@
 
 int main(int argc,char ** argv) {
 
-   volatile int counter =0;
+   uint32_t counter =0;
+
+   _write_word((void*)GPIO_BASE,counter); // Use I/O Reg as Counter variable
 
     while(1) {
-        _write_word((void*)LED_BASE, (counter++ >> 20) & 0xff);        
+         counter=_read_word((void*)GPIO_BASE);
+        _write_word((void*)LED_BASE, (counter++ >> 20) & 0xff); 
+        _write_word((void*)GPIO_BASE,counter);       
    }
 
 };

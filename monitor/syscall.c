@@ -22,7 +22,21 @@ uint32_t  brk_address = (uint32_t) LOAD_BASE;
 
 #define BRK_MAX  (DRAM_TOP-(256*1024))// reserve 256KB as stackspace
 
+#ifdef BONFIRE_CORE
 
+uint64_t get_timer_value()
+{
+  return 0;
+}
+
+long sys_time(long* loc)
+{
+  if (loc) *loc = 0;
+ 
+  return 0;
+}
+
+#else
 
 uint64_t get_timer_value()
 {
@@ -47,6 +61,7 @@ long sys_time(long* loc)
   return t;
 }
 
+#endif
 
 #if (!defined (NO_SYSCALL))
 

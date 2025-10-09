@@ -44,12 +44,18 @@
 
 //#define SIM // undef when not compiling for simulator 
 
-#define PLATFORM_BAUDRATE 38400
+#define PLATFORM_BAUDRATE   115200 // 38400
+
+// #ifndef SIM
+// #define ENABLE_SEND_DELAY
+// #endif 
+
 //#define PLATFORM_BAUDRATE 500000
 
 #define NO_SYSCALL
 #define NO_FLASH
 #define NO_XMODEM
 #define NO_DRAMTEST
+#define NO_DCACHE_TEST
 
 #endif

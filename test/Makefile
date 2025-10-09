@@ -6,6 +6,7 @@ ABI=ilp32
 PLATFORM ?= PAPRO
 LINKSPECS ?=nosys.specs  # For picolic overwrite with  pioolibc.specs in command line
 
+
 BOOTLINK=wildfboot.ld
 
 
@@ -60,7 +61,7 @@ all: ledslow.hex counter.hex memtest.hex ledsim.hex mult.hex memsim.hex sim_hell
 
 
 hw_uart.o: uart.c
-	$(TARGET_CC) $(TARGET_CFLAGS) -o hw_uart.o -c uart.c
+	$(TARGET_CC) $(TARGET_CFLAGS)  -o hw_uart.o -c uart.c
 
 uart.o: uart.c
 	$(TARGET_CC) $(TARGET_CFLAGS) -DSIM -c uart.c 	

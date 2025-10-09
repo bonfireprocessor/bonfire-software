@@ -25,7 +25,7 @@ LINKDEF?=$(PLATFORMDIR)/$(PLATFORM)/firmware.ld
 BOOTLINK=wildfboot.ld
 
 TARGET_CFLAGS +=  -march=$(ARCH) -mabi=$(ABI) -Wall -O2 -g  -fomit-frame-pointer \
-	-ffreestanding -fno-builtin  -fno-builtin-printf    \
+	-ffreestanding -fno-builtin  -fno-builtin-printf -Wimplicit-int   \
 	-Wall \
 	-D$(PLATFORM) -I$(PLATFORMDIR) -I$(PLATFORMDIR)/$(PLATFORM) -I../riscv  -DTIME
 

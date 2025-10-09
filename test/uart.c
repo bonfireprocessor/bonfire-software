@@ -41,6 +41,10 @@ volatile uint32_t *uartadr=(uint32_t *)UART_BASE;
 
 static uint32_t framing_errors = 0L;
 
+#ifdef SIM
+#pragma message "uart.c: Compiling for Simulator"
+#endif
+
 void wait(long nWait)
 {
 static volatile int c;
@@ -56,6 +60,7 @@ void writechar(char c)
 {
 
 #ifdef  ENABLE_SEND_DELAY
+   #pragma message "uart.c: ENABLE_SEND_DELAY is set"
    wait(1000);
 #endif
   while (!(uartadr[UART_STATUS] & 0x2)); // Wait while transmit buffer full
