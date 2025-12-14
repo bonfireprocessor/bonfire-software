@@ -58,7 +58,7 @@
 // Parameters for SPI Flash
 
 #define FLASHSIZE (16384*1024)
-#define MAX_FLASH_IMAGESIZE (2024*1024) // Max 2MB of flash used for boot image
+#define MAX_FLASH_IMAGESIZE (2048*1024) // Max 2MB of flash used for boot image
 #define FLASH_IMAGEBASE (1024*3072)  // Boot Image starts at 3MB in Flash
 
 #define FLASH_FSBASE (8192*1024) // File System Starts at 8MB in FLash
